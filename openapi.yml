@@ -1,0 +1,730 @@
+openapi: 3.1.1
+info:
+  title: Rekapundi
+  description: Rekap your pundi.
+  version: 0.1.0
+tags:
+  - name: expenses
+    description: Operations related to expenses.
+  - name: incomes
+    description: Operations related to incomes.
+  - name: others
+    description: Operations related to other functionalities.
+
+paths:
+  /expenses:
+    post:
+      tags: [expenses]
+      summary: Save multiple expenses.
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/SaveExpenses"
+      responses:
+        "201":
+          description: Success.
+        "400":
+          description: Invalid request body.
+        "401":
+          description: Unauthorized.
+        "409":
+          description: Some foreign key associations are invalid.
+    get:
+      tags: [expenses]
+      summary: Show a list of expenses.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          description: |
+            The start date as the lower bound (inclusive) of the query.
+            Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          description: |
+            The end date as the higher bound (inclusive) of the query.
+            Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 0
+            maximum: 50
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexExpenses"
+        "401":
+          description: Unauthorized.
+  /expenses/{id}:
+    delete:
+      tags: [expenses]
+      summary: Delete an expense record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of expense data to delete.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "204":
+          description: Success.
+        "400":
+          description: Invalid path parameter type.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Expense ID doesn't exists.
+    put:
+      tags: [expenses]
+      summary: Update an expense record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of expense data to update.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateExpense"
+      responses:
+        "204":
+          description: Success.
+        "400":
+          description: Invalid path parameter type or request body.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Expense ID doesn't exists.
+    get:
+      tags: [expenses]
+      summary: Show an expense record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of expense data to show.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/ShowExpense"
+        "400":
+          description: Invalid path parameter type.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Expense ID doesn't exists.
+  /expenses/latest:
+    get:
+      tags: [expenses]
+      summary: Show the latest expense record.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/ExpenseEntity"
+        "401":
+          description: Unauthorized.
+        "404":
+          description: No expenses exist yet.
+        "409":
+          description: Some foreign key associations are invalid.
+
+  /incomes:
+    post:
+      tags: [incomes]
+      summary: Save multiple income records.
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/SaveIncomes"
+      responses:
+        "201":
+          description: Success.
+        "400":
+          description: Invalid request body.
+        "401":
+          description: Unauthorized.
+        "409":
+          description: Some foreign key associations are invalid.
+    get:
+      tags: [incomes]
+      summary: Show a list of incomes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          description: |
+            The start date as the lower bound (inclusive) of the query.
+            Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          description: |
+            The end date as the higher bound (inclusive) of the query.
+            Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 0
+            maximum: 50
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexIncomes"
+        "401":
+          description: Unauthorized.
+  /incomes/{id}:
+    delete:
+      tags: [incomes]
+      summary: Delete an income record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of income data to delete.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "204":
+          description: Success.
+        "400":
+          description: Invalid path parameter type.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Income ID doesn't exists.
+    put:
+      tags: [incomes]
+      summary: Update an income record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of income data to update.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateExpense"
+      responses:
+        "204":
+          description: Success.
+        "400":
+          description: Invalid path parameter type or request body.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Income ID doesn't exists.
+    get:
+      tags: [incomes]
+      summary: Show an income record.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          description: ID of income data to show.
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/ShowIncome"
+        "400":
+          description: Invalid path parameter type.
+        "401":
+          description: Unauthorized.
+        "404":
+          description: Income ID doesn't exists.
+  /incomes/latest:
+    get:
+      tags: [incomes]
+      summary: Show the latest income record.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IncomeEntity"
+        "401":
+          description: Unauthorized.
+        "404":
+          description: No incomes exist yet.
+
+  /categories:
+    get:
+      tags: [others]
+      summary: Show a list of categories.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 0
+            maximum: 100
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexCategories"
+        "401":
+          description: Unauthorized.
+
+  /tags:
+    get:
+      tags: [others]
+      summary: Show a list of tags.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: markImportantValue
+          description: |
+            Filter the records to only show `isMarkedImportant` values that match this query.
+            Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 0
+            maximum: 100
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexTags"
+        "401":
+          description: Unauthorized.
+
+  /wallets:
+    get:
+      tags: [others]
+      summary: Show a list of wallets.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 0
+            maximum: 100
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexWallets"
+        "401":
+          description: Unauthorized.
+
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy!
+
+components:
+  schemas:
+    Entity:
+      type: object
+      properties:
+        id:
+          description: The identifier of the entity.
+          type: integer
+          minimum: 1
+        name:
+          description: The name of the entity.
+          type: string
+      required: [id, name]
+    TagEntities:
+      description: The list of tags, ordered ascendingly by the name field.
+      type: array
+      items:
+        allOf:
+          - $ref: "#/components/schemas/Entity"
+          - type: object
+            properties:
+              isMarkedImportant:
+                description: |
+                  A flag indicating whether this tag holds special significance.
+                  Clients can use this property to visually distinguish, prioritize, or filter important tags.
+                  For example, a frequently used tag like "Gojek" could be marked important,
+                  while an occasional one like "Coffee time with friends" might not be.
+                type: boolean
+            required: [isMarkedImportant]
+    BaseExpense:
+      type: object
+      properties:
+        amount:
+          description: The amount of money spent.
+          type: integer
+          minimum: 0
+        date:
+          description: The date of the expense.
+          type: string
+          format: date
+        description:
+          description: Additional description for the expense.
+          example: Daily caffeine intake.
+          type: string
+          nullable: true
+        priority:
+          description: |
+            The priority scale of the expense.
+            0 is the highest (primary needs), 2 is the lowest priority (tertiary needs).
+          type: integer
+          minimum: 0
+          maximum: 2
+      required: [amount, date, description, priority]
+    ShowExpense:
+      allOf:
+        - $ref: "#/components/schemas/BaseExpense"
+        - type: object
+          properties:
+            category:
+              $ref: "#/components/schemas/Entity"
+            tags:
+              $ref: "#/components/schemas/TagEntities"
+            wallet:
+              $ref: "#/components/schemas/Entity"
+          required: [category, tags, wallet]
+    ExpenseEntity:
+      allOf:
+        - type: object
+          properties:
+            id:
+              description: The identifier of the expense record.
+              type: integer
+              minimum: 1
+          required: [id]
+        - $ref: "#/components/schemas/ShowExpense"
+    SaveExpense:
+      allOf:
+        - $ref: "#/components/schemas/BaseExpense"
+        - type: object
+          properties:
+            categoryId:
+              description: the category identifer to classify the expense.
+              type: integer
+              minimum: 1
+            tagIds:
+              description: |
+                Optional tag identifiers. Left as an empty array if not used.
+              type: array
+              items:
+                type: integer
+                minimum: 1
+            walletId:
+              description: The wallet identifier of where the money is wired from.
+              type: integer
+              minimum: 1
+          required: [categoryId, tagIds, walletId]
+    SaveExpenses:
+      type: object
+      properties:
+        expenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaveExpense"
+      required: [expenses]
+    IndexExpenses:
+      type: object
+      properties:
+        expenses:
+          description: The list of expenses that are sorted ascendingly by the ID.
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: The identifier of the expense.
+                type: integer
+                minimum: 1
+              amount:
+                description: The amount of money spent.
+                type: integer
+                minimum: 0
+              date:
+                description: The date of the expense.
+                type: string
+                format: date
+              description:
+                description: Additional description for the expense.
+                example: Daily caffeine intake.
+                type: string
+                nullable: true
+            required: [amount, date, description, id]
+      required: [expenses]
+    BaseIncome:
+      type: object
+      properties:
+        amount:
+          description: The amount of income.
+          type: integer
+          minimum: 0
+        date:
+          description: The date of the expense.
+          type: string
+          format: date
+        description:
+          description: Optional description of the income.
+          type: string
+          example: Full time job salary.
+          nullable: true
+      required: [amount, date, description]
+    SaveIncome:
+      allOf:
+        - $ref: "#/components/schemas/BaseIncome"
+        - type: object
+          properties:
+            walletId:
+              description: The wallet identifier of where the income is wired to.
+              type: integer
+              minimum: 1
+          required: [walletId]
+    SaveIncomes:
+      type: object
+      properties:
+        incomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaveIncome"
+      required: [incomes]
+    ShowIncome:
+      allOf:
+        - $ref: "#/components/schemas/BaseIncome"
+        - type: object
+          properties:
+            wallet:
+              $ref: "#/components/schemas/Entity"
+          required: [wallet]
+    IncomeEntity:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              minimum: 1
+          required: [id]
+        - $ref: "#/components/schemas/ShowIncome"
+    IndexIncomes:
+      type: object
+      properties:
+        incomes:
+          description: The list of incomes that are sorted ascendingly by the ID.
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: 1
+                required: [id]
+              - $ref: "#/components/schemas/BaseIncome"
+      required: [incomes]
+
+  requestBodies:
+    UpdateExpense:
+      description: Update an expense record.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SaveExpense"
+    SaveExpenses:
+      description: Save multiple expenses records.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SaveExpenses"
+    SaveIncomes:
+      description: Save multiple incomes record.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SaveIncomes"
+
+  responseBodies:
+    ShowExpense:
+      description: The expense record.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ShowExpense"
+    ExpenseEntity:
+      description: The expense enity
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExpenseEntity"
+    IndexExpenses:
+      descripion: List of expense records.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/IndexExpenses"
+    ShowIncome:
+      description: The income record.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ShowIncome"
+    IncomeEntity:
+      description: The income entity.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/IncomeEntity"
+    IndexIncomes:
+      descripion: List of income records.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/IndexIncomes"
+    IndexCategories:
+      description: List of categories.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              categories:
+                descriptions: |
+                  List of categories ordered by the marked important field, and name.
+                type: array
+                items:
+                  $ref: "#/components/schemas/Entity"
+            required: [categories]
+    IndexTags:
+      description: List of tags.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tags:
+                descriptions: List of tags ordered by the name.
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Entity"
+                    - type: object
+                      properties:
+                        isMarkedImportant:
+                          description: |
+                            A flag indicating whether this tag holds special significance.
+                            Clients can use this property to visually distinguish, prioritize, or filter important tags.
+                          type: boolean
+                      required: [isMarkedImportant]
+            required: [tags]
+    IndexWallets:
+      description: List of wallets.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              wallets:
+                descriptions: List of wallets ordered by the name.
+                type: array
+                items:
+                  $ref: "#/components/schemas/Entity"
+            required: [wallets]
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
