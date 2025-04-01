@@ -680,43 +680,62 @@ components:
           type: object
           properties:
             amount:
+              description: The total amount of expenses.
               type: integer
               minimum: 0
             groupedSummary:
+              description: |
+                The summary of expenses grouped by categories and priorities.
+                The categories are ordered by the amount in descending order.
               type: object
               properties:
                 parentCategories:
+                  description: |
+                    The list of parent categories ordered by the amount in descending order.
+                    Each parent category contains a list of child categories.
                   type: array
                   items:
                     type: object
                     properties:
                       name:
+                        description: The name of the parent category.
                         type: string
                       amount:
+                        description: The total amount of the parent category.
                         type: integer
                         minimum: 0
                       categories:
+                        description: |
+                          The list of child categories ordered by the amount in descending order.
                         type: array
                         items:
                           type: object
                           properties:
                             name:
+                              description: The name of the child category.
                               type: string
                             amount:
+                              description: The total amount of the child category.
                               type: integer
                               minimum: 0
                           required: [name, amount]
                     required: [amount, categories, name]
                 priorities:
+                  description: |
+                    The list of priorities ordered by the amount in descending order.
                   type: array
                   items:
                     type: object
                     properties:
                       level:
+                        description: |
+                          The level of priority.
+                          0 is the highest (primary needs), 1 is the secondary needs, 2 is the lowest priority (tertiary needs).
                         type: integer
                         minimum: 0
                         maximum: 2
                       amount:
+                        description: The total amount of the priority.
                         type: integer
                         minimum: 0
                     required: [amount, level]
@@ -726,19 +745,28 @@ components:
           type: object
           properties:
             amount:
+              description: The total amount of incomes.
               type: integer
               minimum: 0
             groupedSummary:
+              description: |
+                The summary of incomes grouped by wallets.
+                The wallets are ordered by the amount in descending order.
+              type: object
               properties:
                 wallets:
+                  description: |
+                    The list of wallets ordered by the amount in descending order.
                   type: array
                   items:
                     type: object
                     properties:
                       name:
+                        description: The name of the wallet.
                         type: string
                         example: GoPay
                       amount:
+                        description: The total amount of the wallet.
                         type: integer
                         minimum: 0
                     required: [amount, name]
@@ -800,7 +828,7 @@ components:
           schema:
             $ref: "#/components/schemas/ExpenseEntity"
     IndexExpenses:
-      descripion: List of expense records.
+      description: List of expense records.
       content:
         application/json:
           schema:
@@ -818,7 +846,7 @@ components:
           schema:
             $ref: "#/components/schemas/IncomeEntity"
     IndexIncomes:
-      descripion: List of income records.
+      description: List of income records.
       content:
         application/json:
           schema:
