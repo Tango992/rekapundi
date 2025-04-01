@@ -8,9 +8,12 @@ use tracing::info;
 #[tokio::main]
 async fn main() {
     config::trace::init();
+    // The PostgreSQL connection pool.
+    let pg_pool = config::database::init().await;
 
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
+        .with_state(pg_pool)
         .layer(CompressionLayer::new())
         .layer(http_trace_layer());
 

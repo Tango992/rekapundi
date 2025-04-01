@@ -10,6 +10,7 @@ authors = [
 
 [dependencies]
 axum = "0.8.3"
+sqlx = { version = "0.8", features = [ "json", "postgres", "runtime-tokio" ] }
 tokio = { version = "1.44.1", features = ["full"] }
 tower-http = { version = "0.6.2", features = ["compression-full", "trace"]}
 tracing = "0.1.41"
