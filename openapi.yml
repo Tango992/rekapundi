@@ -10,6 +10,8 @@ tags:
     description: Operations related to incomes.
   - name: others
     description: Operations related to other functionalities.
+  - name: summaries
+    description: Operations related to income/expense summary.
 
 paths:
   /expenses:
@@ -404,6 +406,35 @@ paths:
         "401":
           description: Unauthorized.
 
+  /summaries/generate/raw:
+    post:
+      tags: [summaries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/GenerateSummary"
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/SummaryRaw"
+        "400":
+          description: Invalid request body.
+        "401":
+          description: Unauthorized.
+  /summaries/generate/chart:
+    post:
+      tags: [summaries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/GenerateSummaryChart"
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/SummaryChart"
+        "400":
+          description: Invalid request body.
+        "401":
+          description: Unauthorized.
+
   /health:
     get:
       tags: [health]
@@ -612,6 +643,111 @@ components:
                 required: [id]
               - $ref: "#/components/schemas/BaseIncome"
       required: [incomes]
+    GenerateSummary:
+      type: object
+      properties:
+        startDate:
+          description: |
+            The start date as the lower bound (inclusive) of the summary.
+          type: string
+          format: date
+        endDate:
+          description: |
+            The start date as the higher bound (inclusive) of the summary.
+          type: string
+          format: date
+        includeMoneyMigration:
+          description: |
+            Whether the summary should include money migrations between wallets.
+          type: boolean
+      required: [startDate, endDate, includeMoneyMigration]
+    GenerateSummaryChart:
+      allOf:
+        - $ref: "#/components/schemas/GenerateSummary"
+        - type: object
+          properties:
+            type:
+              description: The type of chart to generate.
+              type: string
+              example: sankey
+              enum: [bar, sunburst, sankey]
+          required: [type]
+    Summary:
+      description: The financial summary in JSON format.
+      type: object
+      properties:
+        expense:
+          type: object
+          properties:
+            amount:
+              type: integer
+              minimum: 0
+            groupedSummary:
+              type: object
+              properties:
+                parentCategories:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      amount:
+                        type: integer
+                        minimum: 0
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            amount:
+                              type: integer
+                              minimum: 0
+                          required: [name, amount]
+                    required: [amount, categories, name]
+                priorities:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      level:
+                        type: integer
+                        minimum: 0
+                        maximum: 2
+                      amount:
+                        type: integer
+                        minimum: 0
+                    required: [amount, level]
+              required: [parentCategories, priorities]
+          required: [amount, groupedSummary]
+        income:
+          type: object
+          properties:
+            amount:
+              type: integer
+              minimum: 0
+            groupedSummary:
+              properties:
+                wallets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: GoPay
+                      amount:
+                        type: integer
+                        minimum: 0
+                    required: [amount, name]
+              required: [wallets]
+          required: [amount, groupedSummary]
+        incomeToExpenseRatio:
+          type: number
+          required: [expense, income, incomeToExpenseRatio]
+      required: [expense, income, incomeToExpenseRatio]
 
   requestBodies:
     UpdateExpense:
@@ -635,6 +771,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/SaveIncomes"
+    GenerateSummary:
+      description: The input to generate an income/expense summary.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenerateSummary"
+    GenerateSummaryChart:
+      description: The input to generate an income/expense summary.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenerateSummaryChart"
 
   responseBodies:
     ShowExpense:
@@ -681,8 +831,8 @@ components:
             type: object
             properties:
               categories:
-                descriptions: |
-                  List of categories ordered by the marked important field, and name.
+                description: |
+                  List of categories ordered by the name.
                 type: array
                 items:
                   $ref: "#/components/schemas/Entity"
@@ -695,7 +845,8 @@ components:
             type: object
             properties:
               tags:
-                descriptions: List of tags ordered by the name.
+                description: |
+                  List of tags ordered by the marked important field, and name.
                 type: array
                 items:
                   allOf:
@@ -717,11 +868,23 @@ components:
             type: object
             properties:
               wallets:
-                descriptions: List of wallets ordered by the name.
+                description: List of wallets ordered by the name.
                 type: array
                 items:
                   $ref: "#/components/schemas/Entity"
             required: [wallets]
+    SummaryChart:
+      description: A HTML page containing the summary visualization.
+      content:
+        text/html:
+          schema:
+            type: string
+    SummaryRaw:
+      description: The financial summary in JSON.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Summary"
 
   securitySchemes:
     bearerAuth:
