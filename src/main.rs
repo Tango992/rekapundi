@@ -9,7 +9,7 @@ use tracing::info;
 async fn main() {
     config::trace::init();
     // The PostgreSQL connection pool.
-    let pg_pool = config::database::init().await;
+    let pg_pool = config::database::init().await.unwrap();
 
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
