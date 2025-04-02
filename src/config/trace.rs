@@ -1,6 +1,6 @@
 use tower_http::trace::{self, HttpMakeClassifier, TraceLayer};
 
-// Initialize tracing subscriber
+/// Initialize tracing subscriber.
 pub fn init() {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
