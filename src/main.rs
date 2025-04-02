@@ -1,15 +1,16 @@
-mod config;
+mod common;
+mod repositories;
 use axum::{Router, http::StatusCode, routing::get};
-use config::trace::http_trace_layer;
+use common::trace::http_trace_layer;
 use std::env;
 use tower_http::compression::CompressionLayer;
 use tracing::info;
 
 #[tokio::main]
 async fn main() {
-    config::trace::init();
+    common::trace::init();
     // The PostgreSQL connection pool.
-    let pg_pool = config::database::init().await.unwrap();
+    let pg_pool = common::database::init().await.unwrap();
 
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
