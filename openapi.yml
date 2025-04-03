@@ -338,6 +338,36 @@ paths:
         "401":
           description: Unauthorized.
 
+  /parent-categories:
+    get:
+      tags: [others]
+      summary: Show a list of parent categories and their childs.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offset
+          description: Paginate the result by an offset. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          description: Limits the elements of the result. Invalid value will be ignored.
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 0
+            maximum: 100
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/IndexParentCategories"
+        "401":
+          description: Unauthorized.
+
   /tags:
     get:
       tags: [others]
@@ -347,7 +377,7 @@ paths:
       parameters:
         - name: markImportantValue
           description: |
-            Filter the records to only show `isMarkedImportant` values that match this query.
+            Filter the records to only show `isImportant` values that match this query.
             Invalid value will be ignored.
           in: query
           required: false
@@ -464,14 +494,14 @@ components:
           - $ref: "#/components/schemas/Entity"
           - type: object
             properties:
-              isMarkedImportant:
+              isImportant:
                 description: |
                   A flag indicating whether this tag holds special significance.
                   Clients can use this property to visually distinguish, prioritize, or filter important tags.
                   For example, a frequently used tag like "Gojek" could be marked important,
                   while an occasional one like "Coffee time with friends" might not be.
                 type: boolean
-            required: [isMarkedImportant]
+            required: [isImportant]
     BaseExpense:
       type: object
       properties:
@@ -865,6 +895,29 @@ components:
                 items:
                   $ref: "#/components/schemas/Entity"
             required: [categories]
+    IndexParentCategories:
+      description: List of parent categories and their childs.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              parentCategories:
+                description: |
+                  List of parent categories ordered by the name.
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Entity"
+                    - type: object
+                      properties:
+                        categories:
+                          description: List of categories ordered by the name.
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Entity"
+                      required: [categories]
+            required: [parentCategories]
     IndexTags:
       description: List of tags.
       content:
@@ -881,12 +934,12 @@ components:
                     - $ref: "#/components/schemas/Entity"
                     - type: object
                       properties:
-                        isMarkedImportant:
+                        isImportant:
                           description: |
                             A flag indicating whether this tag holds special significance.
                             Clients can use this property to visually distinguish, prioritize, or filter important tags.
                           type: boolean
-                      required: [isMarkedImportant]
+                      required: [isImportant]
             required: [tags]
     IndexWallets:
       description: List of wallets.
