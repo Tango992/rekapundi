@@ -1,7 +1,8 @@
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::sync::Arc;
+
+use crate::dtos::query_result::{ParentCategory, SimpleEntity, Tag};
 
 /// Repository to interact with other supporting tables in the database.
 /// This includes tables like `category`, `tag`, and `wallet`.
@@ -15,38 +16,6 @@ impl UtilRepository {
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
     }
-}
-
-/// Reusable struct for entities with an ID and name.
-#[derive(Deserialize, Serialize)]
-pub struct SimpleEntity {
-    /// The ID of the entity.
-    id: i64,
-    /// The name of the entity.
-    name: String,
-}
-
-/// Represents a record of `tag` table in the database.
-#[derive(Serialize)]
-#[serde(rename_all(serialize = "camelCase"))]
-pub struct Tag {
-    /// The ID of the tag.
-    id: i64,
-    /// The name of the tag.
-    name: String,
-    /// Whether the tag has precedence over other tags.
-    is_important: bool,
-}
-
-/// Represents a record of `parent_category` table and its children in the database.
-#[derive(sqlx::FromRow, Serialize)]
-pub struct ParentCategory {
-    /// The ID of the parent category.
-    id: i64,
-    /// The name of the parent category.
-    name: String,
-    /// The list of child categories.
-    categories: sqlx::types::Json<Vec<SimpleEntity>>,
 }
 
 #[async_trait]
