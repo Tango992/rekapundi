@@ -27,7 +27,7 @@ pub trait ExpenseOperation {
 impl ExpenseOperation for ExpenseRepository {
     async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error> {
         let mut expense_query: QueryBuilder<Postgres> = QueryBuilder::new(
-            "INSERT INTO expense (amount, date, description, category_id, wallet_id) ",
+            "INSERT INTO expense (amount, date, description, category_id, wallet_id, priority) ",
         );
 
         expense_query.push_values(&expenses, |mut builder, expense| {
@@ -36,9 +36,10 @@ impl ExpenseOperation for ExpenseRepository {
                 .push_bind(expense.date)
                 .push_bind(expense.description.clone())
                 .push_bind(expense.category_id as i32)
-                .push_bind(expense.wallet_id as i32);
+                .push_bind(expense.wallet_id as i32)
+                .push_bind(expense.priority as i16);
         });
-        expense_query.push("RETURNING id");
+        expense_query.push(" RETURNING id");
 
         let mut tx = self.pool.begin().await?;
 
@@ -53,28 +54,38 @@ impl ExpenseOperation for ExpenseRepository {
             })
             .collect::<Vec<i32>>();
 
-        assert_eq!(expense_inserted_ids.len(), expenses.len());
+        drop(expense_query);
 
         let mut expense_tag_query: QueryBuilder<Postgres> =
             QueryBuilder::new("INSERT INTO expense_tag (expense_id, tag_id) ");
 
+        // A flag to check if the expense_tag_query is empty to avoid executing an empty query.
         let mut is_expense_tag_query_empty = true;
+
+        // Array of tuples to hold the values for the expense_tag table.
+        // The order of the tuple is (expense_id, tag_id).
+        let mut expense_tag_values = Vec::<(i32, i32)>::new();
 
         for i in 0..expenses.len() {
             let expense_tag_ids = &expenses[i].tag_ids;
             let expense_id = expense_inserted_ids[i];
 
-            if !expense_tag_ids.is_empty() {
+            for tag_id in expense_tag_ids {
                 is_expense_tag_query_empty = false;
-                expense_tag_query.push_values(expense_tag_ids, |mut builder, tag_id| {
-                    builder.push_bind(expense_id).push_bind(*tag_id as i32);
-                });
+                expense_tag_values.push((expense_id, *tag_id as i32));
             }
         }
 
-        if !is_expense_tag_query_empty {
-            expense_tag_query.build().execute(&mut *tx).await?;
+        if is_expense_tag_query_empty {
+            tx.commit().await?;
+            return Ok(());
         }
+
+        expense_tag_query.push_values(expense_tag_values, |mut builder, (expense_id, tag_id)| {
+            builder.push_bind(expense_id).push_bind(tag_id);
+        });
+
+        expense_tag_query.build().execute(&mut *tx).await?;
 
         tx.commit().await?;
 
