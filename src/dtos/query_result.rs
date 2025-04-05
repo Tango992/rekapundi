@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use time::Date;
 
 /// Reusable struct for entities with an ID and name.
 #[derive(Deserialize, Serialize)]
@@ -35,10 +34,29 @@ pub struct ParentCategory {
 
 /// Data transfer object for showing the latest expense.
 #[derive(Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ShowLatestExpense {
     /// The identifier of the expense.
     pub id: i32,
+    /// The amount of the expense.
+    pub amount: i32,
+    /// The date of the expense.
+    pub date: String,
+    /// Optional description of the expense.
+    pub description: Option<String>,
+    /// The priority level of the expense.
+    /// 0: high, 1: medium, 2: low
+    pub priority: i16,
+    /// The category associated with the expense.
+    pub category: sqlx::types::Json<SimpleEntity>,
+    /// The tags associated with the expense.
+    pub tags: sqlx::types::Json<Vec<Tag>>,
+    /// The wallet associated with the expense.
+    pub wallet: sqlx::types::Json<SimpleEntity>,
+}
+
+/// Data transfer object for showing the latest expense.
+#[derive(Deserialize, Serialize)]
+pub struct ShowExpense {
     /// The amount of the expense.
     pub amount: i32,
     /// The date of the expense.

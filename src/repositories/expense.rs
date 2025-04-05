@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::dtos::{
     expense::SaveExpense,
-    query_result::{ShowLatestExpense, SimpleEntity, Tag},
+    query_result::{ShowExpense, ShowLatestExpense, SimpleEntity, Tag},
 };
 
 /// Repository to interact with the `expense` table in the database.
@@ -20,12 +20,15 @@ impl ExpenseRepository {
     }
 }
 
+/// Trait defining operations for the `expense` table.
 #[async_trait]
 pub trait ExpenseOperation {
-    /// Inserts multiple expenses into the database.
-    async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
     /// Finds the latest expense from the database.
     async fn find_latest(&self) -> Result<ShowLatestExpense, sqlx::Error>;
+    /// Finds a specific expense by ID from the database.
+    async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error>;
+    /// Inserts multiple expenses into the database.
+    async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -73,6 +76,55 @@ impl ExpenseOperation for ExpenseRepository {
             ORDER BY id DESC
             LIMIT 1
             "#
+        )
+        .fetch_one(&*self.pool)
+        .await?;
+
+        Ok(latest_expense)
+    }
+
+    async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error> {
+        let latest_expense = query_as!(
+            ShowExpense,
+            r#"
+            SELECT
+                e.amount,
+                TO_CHAR(e.date, 'YYYY-MM-DD') AS "date!: String",
+                e.description,
+                e.priority,
+                JSONB_BUILD_OBJECT(
+                    'id', c.id,
+                    'name', c.name
+                ) AS "category!: sqlx::types::Json<SimpleEntity>",
+                JSONB_BUILD_OBJECT(
+                    'id', w.id,
+                    'name', w.name
+                ) AS "wallet!: sqlx::types::Json<SimpleEntity>",
+                COALESCE(
+                    JSONB_AGG(
+                        JSONB_BUILD_OBJECT(
+                            'id', t.id,
+                            'name', t.name,
+                            'is_important', t.is_important
+                        ) ORDER BY (CASE WHEN t.is_important IS true THEN 0 ELSE 1 END), t.name
+                    ) FILTER (WHERE t.id IS NOT NULL), 
+                    '[]'
+                ) AS "tags!: sqlx::types::Json<Vec<Tag>>"
+            FROM
+                expense e
+            JOIN
+                category c ON e.category_id = c.id
+            JOIN
+                wallet w ON e.wallet_id = w.id
+            LEFT JOIN
+                expense_tag et ON e.id = et.expense_id
+            LEFT JOIN 
+                tag t ON et.tag_id = t.id
+            WHERE e.id = $1
+            GROUP BY
+                e.id, c.id, w.id
+            "#,
+            id,
         )
         .fetch_one(&*self.pool)
         .await?;
