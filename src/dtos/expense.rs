@@ -34,3 +34,123 @@ pub struct SaveBatchExpense {
     #[validate(nested)]
     pub expenses: Vec<SaveExpense>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn test_save_expense_valid() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": []
+        }"#;
+
+        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
+
+        let validation_result = expense.validate();
+        assert!(validation_result.is_ok());
+    }
+
+    #[test]
+    fn test_save_expense_invalid_priority() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 3,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": [1, 2, 3]
+        }"#;
+
+        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
+
+        let validation_result = expense.validate();
+        assert!(validation_result.is_err());
+    }
+
+    #[test]
+    fn test_save_expense_invalid_date() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-12-32",
+            "description": "Test expense",
+            "priority": 2,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": [1, 2, 3]
+        }"#;
+
+        let expense = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(expense.is_err());
+    }
+
+    #[test]
+    fn test_save_batch_expense_valid() {
+        let json_str = r#"{
+            "expenses": [
+                {
+                    "amount": 1000,
+                    "date": "2025-04-01",
+                    "description": "Test expense 1",
+                    "priority": 0,
+                    "categoryId": 1,
+                    "walletId": 1,
+                    "tagIds": [1, 2]
+                },
+                {
+                    "amount": 2000,
+                    "date": "2025-04-02",
+                    "description": null,
+                    "priority": 2,
+                    "categoryId": 2,
+                    "walletId": 1,
+                    "tagIds": []
+                }
+            ]
+        }"#;
+
+        let batch: SaveBatchExpense = serde_json::from_str(json_str).unwrap();
+
+        let validation_result = batch.validate();
+        assert!(validation_result.is_ok());
+    }
+
+    #[test]
+    fn test_save_batch_expense_with_invalid_expense() {
+        let json_str = r#"{
+            "expenses": [
+                {
+                    "amount": 1000,
+                    "date": "2025-04-01",
+                    "description": "Test expense 1",
+                    "priority": 0,
+                    "categoryId": 1,
+                    "walletId": 1,
+                    "tagIds": [1, 2]
+                },
+                {
+                    "amount": 2000,
+                    "date": "2025-04-02",
+                    "description": null,
+                    "priority": 5,
+                    "categoryId": 2,
+                    "walletId": 1,
+                    "tagIds": []
+                }
+            ]
+        }"#;
+
+        let batch: SaveBatchExpense = serde_json::from_str(json_str).unwrap();
+
+        let validation_result = batch.validate();
+        assert!(validation_result.is_err());
+    }
+}
