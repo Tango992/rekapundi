@@ -1,12 +1,11 @@
-use anyhow::Result;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::time::Duration;
 use tracing;
 
 /// Initializes a connection pool to the PostgreSQL database.
-pub async fn init() -> Result<PgPool> {
+pub async fn init() -> Result<PgPool, Box<dyn std::error::Error>> {
     let database_url = std::env::var("DATABASE_URL").map_err(|e| {
-        tracing::error!("DATABASE_URL not found in env file: {}", e);
+        tracing::error!("DATABASE_URL not found in environment");
         e
     })?;
 

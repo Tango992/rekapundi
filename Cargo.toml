@@ -9,7 +9,6 @@ authors = [
 ]
 
 [dependencies]
-anyhow = "1.0.97"
 async-trait = "0.1.88"
 axum = "0.8.3"
 axum-extra = "0.10.1"
