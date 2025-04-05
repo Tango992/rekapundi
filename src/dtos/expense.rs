@@ -4,6 +4,7 @@ use time::Date;
 use validator::Validate;
 
 /// Data transfer object for saving an expense.
+/// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
 #[derive(Clone, Deserialize, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SaveExpense {

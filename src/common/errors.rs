@@ -37,6 +37,8 @@ impl IntoResponse for AppError {
                     _ => (StatusCode::INTERNAL_SERVER_ERROR, db_error.to_string()),
                 },
 
+                sqlx::Error::RowNotFound => (StatusCode::NOT_FOUND, error.to_string()),
+
                 _ => (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()),
             },
         };
