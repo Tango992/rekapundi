@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::{PgPool, Postgres, QueryBuilder, Row, query_as};
+use sqlx::{PgPool, Postgres, QueryBuilder, Row, query, query_as};
 use std::sync::Arc;
 
 use crate::dtos::{
@@ -23,6 +23,8 @@ impl ExpenseRepository {
 /// Trait defining operations for the `expense` table.
 #[async_trait]
 pub trait ExpenseOperation {
+    /// Deletes an expense from the database.
+    async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds the latest expense from the database.
     async fn find_latest(&self) -> Result<ShowLatestExpense, sqlx::Error>;
     /// Finds a specific expense by ID from the database.
@@ -33,6 +35,19 @@ pub trait ExpenseOperation {
 
 #[async_trait]
 impl ExpenseOperation for ExpenseRepository {
+    async fn delete(&self, id: i32) -> Result<(), sqlx::Error> {
+        let rows_affected = query!("DELETE FROM expense WHERE id = $1", id)
+            .execute(&*self.pool)
+            .await?
+            .rows_affected();
+
+        if rows_affected == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        Ok(())
+    }
+
     async fn find_latest(&self) -> Result<ShowLatestExpense, sqlx::Error> {
         let latest_expense = query_as!(
             ShowLatestExpense,

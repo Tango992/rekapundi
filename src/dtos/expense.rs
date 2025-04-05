@@ -31,6 +31,6 @@ pub struct SaveExpense {
 #[derive(Clone, Deserialize, Serialize, Validate)]
 pub struct SaveBatchExpense {
     /// The list of expenses to be saved.
-    #[validate]
+    #[validate(nested)]
     pub expenses: Vec<SaveExpense>,
 }
