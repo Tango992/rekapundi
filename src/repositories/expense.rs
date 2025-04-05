@@ -56,9 +56,6 @@ impl ExpenseOperation for ExpenseRepository {
 
         drop(expense_query);
 
-        let mut expense_tag_query: QueryBuilder<Postgres> =
-            QueryBuilder::new("INSERT INTO expense_tag (expense_id, tag_id) ");
-
         // A flag to check if the expense_tag_query is empty to avoid executing an empty query.
         let mut is_expense_tag_query_empty = true;
 
@@ -80,6 +77,9 @@ impl ExpenseOperation for ExpenseRepository {
             tx.commit().await?;
             return Ok(());
         }
+
+        let mut expense_tag_query: QueryBuilder<Postgres> =
+            QueryBuilder::new("INSERT INTO expense_tag (expense_id, tag_id) ");
 
         expense_tag_query.push_values(expense_tag_values, |mut builder, (expense_id, tag_id)| {
             builder.push_bind(expense_id).push_bind(tag_id);
