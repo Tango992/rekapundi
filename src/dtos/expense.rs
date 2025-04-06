@@ -69,19 +69,19 @@ pub struct IndexExpenseQuery {
 
 impl IndexExpenseQuery {
     /// Returns the limit for pagination, defaulting to `MAX_PAGINATION_LIMIT` if not set or invalid.
-    pub fn limit(&self) -> u32 {
+    pub fn limit(&self) -> i64 {
         let raw_limit = self.limit.unwrap_or(MAX_PAGINATION_LIMIT);
 
         if raw_limit > MAX_PAGINATION_LIMIT {
-            return MAX_PAGINATION_LIMIT;
+            return MAX_PAGINATION_LIMIT as i64;
         }
 
-        raw_limit
+        raw_limit as i64
     }
 
     /// Returns the offset for pagination, defaulting to `0` if not set or invalid.
-    pub fn offset(&self) -> u32 {
-        self.offset.unwrap_or(0)
+    pub fn offset(&self) -> i64 {
+        self.offset.unwrap_or(0) as i64
     }
 }
 
