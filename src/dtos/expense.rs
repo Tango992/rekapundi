@@ -38,6 +38,7 @@ pub struct SaveBatchExpense {
 
 /// Data transfer object for the response of the index expense endpoint.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, PartialEq, Eq))]
 pub struct IndexExpenseResponse {
     /// The list of expenses.
     pub expenses: Vec<IndexExpenseElement>,

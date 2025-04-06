@@ -32,8 +32,8 @@ impl IntoResponse for AppError {
         let (status, message) = match self {
             AppError::JsonRejection(rejection) => (rejection.status(), Some(rejection.body_text())),
 
-            AppError::PathRejection(_) => (
-                StatusCode::BAD_REQUEST,
+            AppError::PathRejection(rejection) => (
+                rejection.status(),
                 Some("Invalid path parameter".to_string()),
             ),
 

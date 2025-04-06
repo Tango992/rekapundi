@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Reusable struct for entities with an ID and name.
 #[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct SimpleEntity {
     /// The ID of the entity.
     pub id: i64,
@@ -11,7 +12,8 @@ pub struct SimpleEntity {
 
 /// Represents a record of `tag` table in the database.
 #[derive(Deserialize, Serialize)]
-#[serde(rename_all(serialize = "camelCase"))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct Tag {
     /// The ID of the tag.
     pub id: i64,
@@ -33,7 +35,8 @@ pub struct ParentCategory {
 }
 
 /// Data transfer object for showing the latest expense.
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct ShowLatestExpense {
     /// The identifier of the expense.
     pub id: i32,
@@ -55,7 +58,8 @@ pub struct ShowLatestExpense {
 }
 
 /// Data transfer object for showing the latest expense.
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct ShowExpense {
     /// The amount of the expense.
     pub amount: i32,
@@ -75,7 +79,8 @@ pub struct ShowExpense {
 }
 
 /// Data transfer object to show the list of expenses.
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 pub struct IndexExpenseElement {
     /// The ID of the expense.
     pub id: i32,
