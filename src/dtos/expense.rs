@@ -1,17 +1,17 @@
-use crate::common::deserializer;
-use serde::{Deserialize, Serialize};
+use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};
+use serde::Deserialize;
 use time::Date;
 use validator::Validate;
 
 /// Data transfer object for saving an expense.
 /// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
-#[derive(Clone, Deserialize, Serialize, Validate)]
+#[derive(Clone, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SaveExpense {
     /// The amount of the expense.
     pub amount: u32,
     /// The date of the expense.
-    #[serde(deserialize_with = "deserializer::raw_to_date")]
+    #[serde(deserialize_with = "deserializer::date")]
     pub date: Date,
     /// Optional description of the expense.
     pub description: Option<String>,
@@ -28,11 +28,72 @@ pub struct SaveExpense {
 }
 
 /// Data transfer object for saving a batch of expenses.
-#[derive(Clone, Deserialize, Serialize, Validate)]
+#[derive(Clone, Deserialize, Validate)]
 pub struct SaveBatchExpense {
     /// The list of expenses to be saved.
     #[validate(nested)]
     pub expenses: Vec<SaveExpense>,
+}
+
+/// The query string for filtering expenses.
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IndexExpenseQuery {
+    /// The lower bound date (inclusive) for filtering expenses.
+    #[serde(
+        deserialize_with = "deserializer::optional_date",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub start_date: Option<Date>,
+    /// The upper bound date (inclusive) for filtering expenses.
+    #[serde(
+        deserialize_with = "deserializer::optional_date",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub end_date: Option<Date>,
+    /// The maximum number of expenses to return.
+    #[serde(
+        deserialize_with = "deserializer::pagination_value_with_fallback",
+        default
+    )]
+    limit: Option<u32>,
+    /// The offset for pagination.
+    #[serde(
+        deserialize_with = "deserializer::pagination_value_with_fallback",
+        default
+    )]
+    offset: Option<u32>,
+}
+
+impl IndexExpenseQuery {
+    /// Returns the limit for pagination, defaulting to `MAX_PAGINATION_LIMIT` if not set or invalid.
+    pub fn limit(&self) -> u32 {
+        let raw_limit = self.limit.unwrap_or(MAX_PAGINATION_LIMIT);
+
+        if raw_limit > MAX_PAGINATION_LIMIT {
+            return MAX_PAGINATION_LIMIT;
+        }
+
+        raw_limit
+    }
+
+    /// Returns the offset for pagination, defaulting to `0` if not set or invalid.
+    pub fn offset(&self) -> u32 {
+        self.offset.unwrap_or(0)
+    }
+}
+
+impl Default for IndexExpenseQuery {
+    fn default() -> Self {
+        Self {
+            start_date: None,
+            end_date: None,
+            limit: Some(MAX_PAGINATION_LIMIT),
+            offset: Some(0),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -152,5 +213,129 @@ mod tests {
 
         let validation_result = batch.validate();
         assert!(validation_result.is_err());
+    }
+
+    #[test]
+    fn test_index_expense_query_with_all_fields() {
+        let json_str = r#"{
+            "startDate": "2025-03-01",
+            "endDate": "2025-04-01",
+            "limit": 10,
+            "offset": 0
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        let expected_start = Date::from_calendar_date(2025, time::Month::March, 1).unwrap();
+        let expected_end = Date::from_calendar_date(2025, time::Month::April, 1).unwrap();
+
+        assert_eq!(query.start_date, Some(expected_start));
+        assert_eq!(query.end_date, Some(expected_end));
+        assert_eq!(query.limit(), 10);
+        assert_eq!(query.offset(), 0);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_missing_pagination_fields() {
+        let json_str = r#"{
+            "startDate": "2025-03-01",
+            "endDate": "2025-04-01"
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        let expected_start = Date::from_calendar_date(2025, time::Month::March, 1).unwrap();
+        let expected_end = Date::from_calendar_date(2025, time::Month::April, 1).unwrap();
+
+        assert_eq!(query.start_date, Some(expected_start));
+        assert_eq!(query.end_date, Some(expected_end));
+
+        assert_eq!(query.limit(), 100);
+        assert_eq!(query.offset(), 0);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_null_pagination_fields() {
+        let json_str = r#"{
+            "startDate": "2025-03-01",
+            "endDate": "2025-04-01",
+            "limit": null,
+            "offset": null
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        let expected_start = Date::from_calendar_date(2025, time::Month::March, 1).unwrap();
+        let expected_end = Date::from_calendar_date(2025, time::Month::April, 1).unwrap();
+
+        assert_eq!(query.start_date, Some(expected_start));
+        assert_eq!(query.end_date, Some(expected_end));
+
+        assert_eq!(query.limit(), 100);
+        assert_eq!(query.offset(), 0);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_invalid_pagination() {
+        let json_str = r#"{
+            "limit": 101,
+            "offset": -1
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        assert_eq!(query.start_date, None);
+        assert_eq!(query.end_date, None);
+        assert_eq!(query.limit(), 100);
+        assert_eq!(query.offset(), 0);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_missing_optional_fields() {
+        let json_str = r#"{
+            "limit": 20,
+            "offset": 5
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        assert_eq!(query.start_date, None);
+        assert_eq!(query.end_date, None);
+        assert_eq!(query.limit(), 20);
+        assert_eq!(query.offset(), 5);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_null_dates() {
+        let json_str = r#"{
+            "startDate": null,
+            "endDate": null,
+            "limit": 15,
+            "offset": 10
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        assert_eq!(query.start_date, None);
+        assert_eq!(query.end_date, None);
+        assert_eq!(query.limit(), 15);
+        assert_eq!(query.offset(), 10);
+    }
+
+    #[test]
+    fn test_index_expense_query_with_invalid_date_format() {
+        let json_str = r#"{
+            "startDate": "2025/03/01",
+            "endDate": "2025-04-32",
+            "limit": 25,
+            "offset": 0
+        }"#;
+
+        let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
+
+        assert_eq!(query.start_date, None);
+        assert_eq!(query.end_date, None);
+        assert_eq!(query.limit(), 25);
+        assert_eq!(query.offset(), 0);
     }
 }
