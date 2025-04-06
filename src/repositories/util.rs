@@ -129,7 +129,7 @@ impl UtilOperation for UtilRepository {
             SELECT id, name, is_important
             FROM tag
             WHERE $1::BOOLEAN IS NULL OR is_important = $1
-            ORDER BY name
+            ORDER BY (CASE WHEN is_important IS true THEN 0 ELSE 1 END), name
             OFFSET $2 LIMIT $3
             "#,
             mark_important_value,

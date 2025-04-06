@@ -40,6 +40,18 @@ where
     }
 }
 
+/// Deserialize a raw input into an optional boolean value.
+/// Invalid inputs will be converted to `None`.
+pub fn bool_with_fallback<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    match Deserialize::deserialize(deserializer) {
+        Ok(value) => Ok(Some(value)),
+        Err(_) => Ok(None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -62,6 +74,12 @@ mod tests {
     struct PaginationTestStruct {
         #[serde(deserialize_with = "pagination_value_with_fallback")]
         limit: Option<u32>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct NullableTestStruct {
+        #[serde(deserialize_with = "bool_with_fallback")]
+        nullable: Option<bool>,
     }
 
     #[test]
@@ -139,5 +157,24 @@ mod tests {
         let result = serde_json::from_str::<PaginationTestStruct>(json_str);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().limit, None);
+    }
+
+    #[test]
+    fn test_bool_with_fallback_happy() {
+        let json_str = r#"{
+            "nullable": true
+        }"#;
+        let test_struct: NullableTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.nullable, Some(true));
+    }
+
+    #[test]
+    fn test_bool_with_fallback_invalid() {
+        let json_str = r#"{
+            "nullable": "invalid"
+        }"#;
+        let result = serde_json::from_str::<NullableTestStruct>(json_str);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().nullable, None);
     }
 }

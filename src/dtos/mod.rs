@@ -1,5 +1,6 @@
 pub mod expense;
 pub mod query_result;
+pub mod util;
 
 use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};
 use serde::Deserialize;
