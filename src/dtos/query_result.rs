@@ -73,3 +73,16 @@ pub struct ShowExpense {
     /// The wallet associated with the expense.
     pub wallet: sqlx::types::Json<SimpleEntity>,
 }
+
+/// Data transfer object to show the list of expenses.
+#[derive(Deserialize, Serialize)]
+pub struct IndexExpenseElement {
+    /// The ID of the expense.
+    pub id: i32,
+    /// The amount of the expense.
+    pub amount: i32,
+    /// The date of the expense.
+    pub date: String,
+    /// Optional description of the expense.
+    pub description: Option<String>,
+}

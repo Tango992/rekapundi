@@ -3,8 +3,8 @@ use sqlx::{PgPool, Postgres, QueryBuilder, Row, query, query_as};
 use std::sync::Arc;
 
 use crate::dtos::{
-    expense::SaveExpense,
-    query_result::{ShowExpense, ShowLatestExpense, SimpleEntity, Tag},
+    expense::{IndexExpenseQuery, SaveExpense},
+    query_result::{IndexExpenseElement, ShowExpense, ShowLatestExpense, SimpleEntity, Tag},
 };
 
 /// Repository to interact with the `expense` table in the database.
@@ -25,6 +25,11 @@ impl ExpenseRepository {
 pub trait ExpenseOperation {
     /// Deletes an expense from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
+    /// Finds all expenses from the database.
+    async fn find_all(
+        &self,
+        query: IndexExpenseQuery,
+    ) -> Result<Vec<IndexExpenseElement>, sqlx::Error>;
     /// Finds the latest expense from the database.
     async fn find_latest(&self) -> Result<ShowLatestExpense, sqlx::Error>;
     /// Finds a specific expense by ID from the database.
@@ -35,6 +40,37 @@ pub trait ExpenseOperation {
 
 #[async_trait]
 impl ExpenseOperation for ExpenseRepository {
+    async fn find_all(
+        &self,
+        query: IndexExpenseQuery,
+    ) -> Result<Vec<IndexExpenseElement>, sqlx::Error> {
+        let expenses = query_as!(
+            IndexExpenseElement,
+            r#"
+            SELECT
+                id,
+                amount,
+                TO_CHAR(date, 'YYYY-MM-DD') AS "date!: String",
+                description
+            FROM
+                expense
+            WHERE
+                ($1::DATE IS NULL OR date >= $1::DATE)
+                AND ($2::DATE IS NULL OR date <= $2::DATE)
+            ORDER BY id
+            LIMIT $3 OFFSET $4
+            "#,
+            query.start_date,
+            query.end_date,
+            query.limit(),
+            query.offset(),
+        )
+        .fetch_all(&*self.pool)
+        .await?;
+
+        Ok(expenses)
+    }
+
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error> {
         let rows_affected = query!("DELETE FROM expense WHERE id = $1", id)
             .execute(&*self.pool)

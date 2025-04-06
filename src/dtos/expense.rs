@@ -1,12 +1,13 @@
+use crate::dtos::query_result::IndexExpenseElement;
 use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use time::Date;
 use validator::Validate;
 
 /// Data transfer object for saving an expense.
 /// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
-#[derive(Clone, Deserialize, Validate)]
-#[serde(rename_all = "camelCase")]
+#[derive(Deserialize, Validate)]
+#[serde(rename_all(deserialize = "camelCase"))]
 pub struct SaveExpense {
     /// The amount of the expense.
     pub amount: u32,
@@ -28,16 +29,23 @@ pub struct SaveExpense {
 }
 
 /// Data transfer object for saving a batch of expenses.
-#[derive(Clone, Deserialize, Validate)]
+#[derive(Deserialize, Validate)]
 pub struct SaveBatchExpense {
     /// The list of expenses to be saved.
     #[validate(nested)]
     pub expenses: Vec<SaveExpense>,
 }
 
+/// Data transfer object for the response of the index expense endpoint.
+#[derive(Serialize)]
+pub struct IndexExpenseResponse {
+    /// The list of expenses.
+    pub expenses: Vec<IndexExpenseElement>,
+}
+
 /// The query string for filtering expenses.
-#[derive(Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Deserialize)]
+#[serde(rename_all(deserialize = "camelCase"))]
 pub struct IndexExpenseQuery {
     /// The lower bound date (inclusive) for filtering expenses.
     #[serde(
