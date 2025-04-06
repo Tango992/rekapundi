@@ -1,4 +1,9 @@
-use axum::{Json, extract::rejection::JsonRejection, http::StatusCode, response::IntoResponse};
+use axum::{
+    Json,
+    extract::rejection::{JsonRejection, PathRejection},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use serde::Serialize;
 use sqlx::error::ErrorKind::{ForeignKeyViolation, NotNullViolation, UniqueViolation};
 
@@ -14,6 +19,8 @@ struct ErrorResponse {
 pub enum AppError {
     /// Error related to Axum's JSON extraction.
     JsonRejection(JsonRejection),
+    /// Error related to Axum's Path extraction.
+    PathRejection(PathRejection),
     /// Error related to ValidationErrors. This is different from the JsonRejection.
     ValidationError(validator::ValidationErrors),
     /// Error related to SQLx database operations.
@@ -23,32 +30,42 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let (status, message) = match self {
-            AppError::JsonRejection(rejection) => (rejection.status(), rejection.body_text()),
+            AppError::JsonRejection(rejection) => (rejection.status(), Some(rejection.body_text())),
+
+            AppError::PathRejection(_) => (
+                StatusCode::BAD_REQUEST,
+                Some("Invalid path parameter".to_string()),
+            ),
 
             AppError::ValidationError(errors) => {
-                (StatusCode::UNPROCESSABLE_ENTITY, errors.to_string())
+                (StatusCode::UNPROCESSABLE_ENTITY, Some(errors.to_string()))
             }
 
             AppError::SqlxError(error) => match error {
                 sqlx::Error::Database(db_error) => match db_error.kind() {
                     UniqueViolation | ForeignKeyViolation | NotNullViolation => {
-                        (StatusCode::CONFLICT, db_error.to_string())
+                        tracing::debug!("{:?}", db_error.to_string());
+                        (StatusCode::CONFLICT, None)
                     }
-                    _ => (StatusCode::INTERNAL_SERVER_ERROR, db_error.to_string()),
+
+                    _ => {
+                        tracing::debug!("{:?}", db_error.to_string());
+                        (StatusCode::INTERNAL_SERVER_ERROR, None)
+                    }
                 },
 
-                sqlx::Error::RowNotFound => (StatusCode::NOT_FOUND, error.to_string()),
+                sqlx::Error::RowNotFound => (StatusCode::NOT_FOUND, None),
 
-                _ => (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()),
+                _ => {
+                    tracing::debug!("{:?}", error.to_string());
+                    (StatusCode::INTERNAL_SERVER_ERROR, None)
+                }
             },
         };
 
-        match status {
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                tracing::error!("Internal server error: {}", message);
-                status.into_response()
-            }
-            _ => (status, Json(ErrorResponse { message })).into_response(),
+        match message {
+            Some(msg) => (status, Json(ErrorResponse { message: msg })).into_response(),
+            None => status.into_response(),
         }
     }
 }
@@ -56,6 +73,12 @@ impl IntoResponse for AppError {
 impl From<JsonRejection> for AppError {
     fn from(rejection: JsonRejection) -> Self {
         AppError::JsonRejection(rejection)
+    }
+}
+
+impl From<PathRejection> for AppError {
+    fn from(rejection: PathRejection) -> Self {
+        AppError::PathRejection(rejection)
     }
 }
 
