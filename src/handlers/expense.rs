@@ -34,10 +34,7 @@ async fn destroy(
     WithRejection(Path(id), _): WithRejection<Path<u32>, AppError>,
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
-    expense_repository
-        .delete(id as i32)
-        .await
-        .map_err(|e| AppError::from(e))?;
+    expense_repository.delete(id as i32).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -47,10 +44,7 @@ async fn index(
     Query(query): Query<IndexExpenseQuery>,
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
-    let expenses = expense_repository
-        .find_all(query)
-        .await
-        .map_err(|e| AppError::from(e))?;
+    let expenses = expense_repository.find_all(query).await?;
 
     Ok((StatusCode::OK, Json(IndexExpenseResponse { expenses })))
 }
@@ -60,12 +54,9 @@ async fn save_bulk(
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveBatchExpense>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
-    body.validate().map_err(|e| AppError::from(e))?;
+    body.validate()?;
 
-    expense_repository
-        .insert_bulk(body.expenses)
-        .await
-        .map_err(|e| AppError::from(e))?;
+    expense_repository.insert_bulk(body.expenses).await?;
 
     Ok(StatusCode::CREATED)
 }
@@ -75,10 +66,7 @@ async fn show(
     WithRejection(Path(id), _): WithRejection<Path<u32>, AppError>,
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
-    let expense = expense_repository
-        .find_one(id as i32)
-        .await
-        .map_err(|e| AppError::from(e))?;
+    let expense = expense_repository.find_one(id as i32).await?;
 
     Ok((StatusCode::OK, Json(expense)))
 }
@@ -87,10 +75,7 @@ async fn show(
 async fn show_latest(
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
-    let latest_expense = expense_repository
-        .find_latest()
-        .await
-        .map_err(|e| AppError::from(e))?;
+    let latest_expense = expense_repository.find_latest().await?;
 
     Ok((StatusCode::OK, Json(latest_expense)))
 }
@@ -101,12 +86,9 @@ async fn update(
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveExpense>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
-    body.validate().map_err(|e| AppError::from(e))?;
+    body.validate()?;
 
-    expense_repository
-        .update(id as i32, body)
-        .await
-        .map_err(|e| AppError::from(e))?;
+    expense_repository.update(id as i32, body).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
