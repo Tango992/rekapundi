@@ -36,6 +36,7 @@ pub trait ExpenseOperation {
     async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error>;
     /// Inserts multiple expenses into the database.
     async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
+    async fn update(&self, id: i32, expense: SaveExpense) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -247,6 +248,59 @@ impl ExpenseOperation for ExpenseRepository {
 
         tx.commit().await?;
 
+        Ok(())
+    }
+
+    async fn update(&self, id: i32, expense: SaveExpense) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        let rows_affected = query!(
+            r#"
+            UPDATE expense
+            SET amount = $1,
+                date = $2,
+                description = $3,
+                category_id = $4,
+                wallet_id = $5,
+                priority = $6
+            WHERE id = $7
+            "#,
+            expense.amount as i32,
+            expense.date,
+            expense.description.clone(),
+            expense.category_id as i32,
+            expense.wallet_id as i32,
+            expense.priority as i16,
+            id
+        )
+        .execute(&mut *tx)
+        .await?
+        .rows_affected();
+
+        if rows_affected == 0 {
+            tx.rollback().await?;
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        query!(
+            r#"
+            DELETE FROM expense_tag
+            WHERE expense_id = $1
+            "#,
+            id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        let mut expense_tag_query =
+            QueryBuilder::<Postgres>::new("INSERT INTO expense_tag (expense_id, tag_id) ");
+        expense_tag_query.push_values(&expense.tag_ids, |mut builder, tag_id| {
+            builder.push_bind(id).push_bind(*tag_id as i32);
+        });
+
+        expense_tag_query.build().execute(&mut *tx).await?;
+
+        tx.commit().await?;
         Ok(())
     }
 }
