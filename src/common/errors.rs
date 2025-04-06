@@ -128,4 +128,25 @@ mod tests {
             StatusCode::UNPROCESSABLE_ENTITY
         );
     }
+
+    #[test]
+    fn test_from_sqlx_row_not_found_error() {
+        let sqlx_error = sqlx::Error::RowNotFound;
+        let app_error = AppError::from(sqlx_error);
+
+        assert!(matches!(app_error, AppError::SqlxError(_)));
+        assert_eq!(app_error.into_response().status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn test_from_sqlx_unhandled_error() {
+        let sqlx_error = sqlx::Error::Protocol("Test error".to_string());
+        let app_error = AppError::from(sqlx_error);
+
+        assert!(matches!(app_error, AppError::SqlxError(_)));
+        assert_eq!(
+            app_error.into_response().status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+    }
 }
