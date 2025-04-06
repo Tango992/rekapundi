@@ -1,5 +1,5 @@
-use crate::dtos::query_result::IndexExpenseElement;
-use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};
+use crate::common::deserializer;
+use crate::dtos::{Pagination, query_result::IndexExpenseElement};
 use serde::{Deserialize, Serialize};
 use time::Date;
 use validator::Validate;
@@ -62,47 +62,9 @@ pub struct IndexExpenseQuery {
         default
     )]
     pub end_date: Option<Date>,
-    /// The maximum number of expenses to return.
-    #[serde(
-        deserialize_with = "deserializer::pagination_value_with_fallback",
-        default
-    )]
-    limit: Option<u32>,
-    /// The offset for pagination.
-    #[serde(
-        deserialize_with = "deserializer::pagination_value_with_fallback",
-        default
-    )]
-    offset: Option<u32>,
-}
-
-impl IndexExpenseQuery {
-    /// Returns the limit for pagination, defaulting to `MAX_PAGINATION_LIMIT` if not set or invalid.
-    pub fn limit(&self) -> i64 {
-        let raw_limit = self.limit.unwrap_or(MAX_PAGINATION_LIMIT);
-
-        if raw_limit > MAX_PAGINATION_LIMIT {
-            return MAX_PAGINATION_LIMIT as i64;
-        }
-
-        raw_limit as i64
-    }
-
-    /// Returns the offset for pagination, defaulting to `0` if not set or invalid.
-    pub fn offset(&self) -> i64 {
-        self.offset.unwrap_or(0) as i64
-    }
-}
-
-impl Default for IndexExpenseQuery {
-    fn default() -> Self {
-        Self {
-            start_date: None,
-            end_date: None,
-            limit: Some(MAX_PAGINATION_LIMIT),
-            offset: Some(0),
-        }
-    }
+    /// The pagination information for the query.
+    #[serde(flatten)]
+    pub pagination: Pagination,
 }
 
 #[cfg(test)]
@@ -240,8 +202,8 @@ mod tests {
 
         assert_eq!(query.start_date, Some(expected_start));
         assert_eq!(query.end_date, Some(expected_end));
-        assert_eq!(query.limit(), 10);
-        assert_eq!(query.offset(), 0);
+        assert_eq!(query.pagination.limit(), 10);
+        assert_eq!(query.pagination.offset(), 0);
     }
 
     #[test]
@@ -259,8 +221,8 @@ mod tests {
         assert_eq!(query.start_date, Some(expected_start));
         assert_eq!(query.end_date, Some(expected_end));
 
-        assert_eq!(query.limit(), 100);
-        assert_eq!(query.offset(), 0);
+        assert_eq!(query.pagination.limit(), 100);
+        assert_eq!(query.pagination.offset(), 0);
     }
 
     #[test]
@@ -280,8 +242,8 @@ mod tests {
         assert_eq!(query.start_date, Some(expected_start));
         assert_eq!(query.end_date, Some(expected_end));
 
-        assert_eq!(query.limit(), 100);
-        assert_eq!(query.offset(), 0);
+        assert_eq!(query.pagination.limit(), 100);
+        assert_eq!(query.pagination.offset(), 0);
     }
 
     #[test]
@@ -295,8 +257,8 @@ mod tests {
 
         assert_eq!(query.start_date, None);
         assert_eq!(query.end_date, None);
-        assert_eq!(query.limit(), 100);
-        assert_eq!(query.offset(), 0);
+        assert_eq!(query.pagination.limit(), 100);
+        assert_eq!(query.pagination.offset(), 0);
     }
 
     #[test]
@@ -310,8 +272,8 @@ mod tests {
 
         assert_eq!(query.start_date, None);
         assert_eq!(query.end_date, None);
-        assert_eq!(query.limit(), 20);
-        assert_eq!(query.offset(), 5);
+        assert_eq!(query.pagination.limit(), 20);
+        assert_eq!(query.pagination.offset(), 5);
     }
 
     #[test]
@@ -327,8 +289,8 @@ mod tests {
 
         assert_eq!(query.start_date, None);
         assert_eq!(query.end_date, None);
-        assert_eq!(query.limit(), 15);
-        assert_eq!(query.offset(), 10);
+        assert_eq!(query.pagination.limit(), 15);
+        assert_eq!(query.pagination.offset(), 10);
     }
 
     #[test]
@@ -344,7 +306,7 @@ mod tests {
 
         assert_eq!(query.start_date, None);
         assert_eq!(query.end_date, None);
-        assert_eq!(query.limit(), 25);
-        assert_eq!(query.offset(), 0);
+        assert_eq!(query.pagination.limit(), 25);
+        assert_eq!(query.pagination.offset(), 0);
     }
 }

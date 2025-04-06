@@ -63,8 +63,8 @@ impl ExpenseOperation for ExpenseRepository {
             "#,
             query.start_date,
             query.end_date,
-            query.limit(),
-            query.offset(),
+            query.pagination.limit(),
+            query.pagination.offset(),
         )
         .fetch_all(&*self.pool)
         .await?;

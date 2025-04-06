@@ -116,6 +116,7 @@ mod tests {
     use super::*;
     use crate::{
         dtos::{
+            Pagination,
             expense::{IndexExpenseQuery, SaveBatchExpense, SaveExpense},
             query_result::{
                 IndexExpenseElement, ShowExpense, ShowLatestExpense, SimpleEntity, Tag,
@@ -269,7 +270,11 @@ mod tests {
     async fn test_index_handler() {
         // Prepare
         let repo = MockExpenseRepository::new();
-        let query = IndexExpenseQuery::default();
+        let query = IndexExpenseQuery {
+            start_date: None,
+            end_date: None,
+            pagination: Pagination::default(),
+        };
 
         // Execute
         let result = index(Query(query), State(repo)).await;
