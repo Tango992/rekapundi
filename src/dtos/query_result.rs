@@ -22,7 +22,7 @@ pub struct Tag {
 }
 
 /// Represents a record of `parent_category` table and its children in the database.
-#[derive(sqlx::FromRow, Serialize)]
+#[derive(Serialize)]
 pub struct ParentCategory {
     /// The ID of the parent category.
     pub id: i64,
@@ -33,7 +33,7 @@ pub struct ParentCategory {
 }
 
 /// Data transfer object for showing the latest expense.
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct ShowLatestExpense {
     /// The identifier of the expense.
     pub id: i32,
@@ -55,7 +55,7 @@ pub struct ShowLatestExpense {
 }
 
 /// Data transfer object for showing the latest expense.
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct ShowExpense {
     /// The amount of the expense.
     pub amount: i32,
@@ -75,7 +75,7 @@ pub struct ShowExpense {
 }
 
 /// Data transfer object to show the list of expenses.
-#[derive(Deserialize, Serialize)]
+#[derive(Serialize)]
 pub struct IndexExpenseElement {
     /// The ID of the expense.
     pub id: i32,
