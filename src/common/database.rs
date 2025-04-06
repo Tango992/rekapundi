@@ -4,9 +4,8 @@ use tracing;
 
 /// Initializes a connection pool to the PostgreSQL database.
 pub async fn init() -> Result<PgPool, Box<dyn std::error::Error>> {
-    let database_url = std::env::var("DATABASE_URL").map_err(|e| {
+    let database_url = std::env::var("DATABASE_URL").inspect_err(|_| {
         tracing::error!("DATABASE_URL not found in environment");
-        e
     })?;
 
     let pg_pool = PgPoolOptions::new()
@@ -14,9 +13,8 @@ pub async fn init() -> Result<PgPool, Box<dyn std::error::Error>> {
         .acquire_timeout(Duration::from_secs(3))
         .connect(&database_url)
         .await
-        .map_err(|e| {
-            tracing::error!("Failed to connect to the database: {}", e);
-            e
+        .inspect_err(|_| {
+            tracing::error!("Failed to connect to the database");
         })?;
 
     Ok(pg_pool)

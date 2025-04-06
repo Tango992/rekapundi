@@ -36,6 +36,7 @@ pub trait ExpenseOperation {
     async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error>;
     /// Inserts multiple expenses into the database.
     async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
+    /// Updates an existing expense in the database.
     async fn update(&self, id: i32, expense: SaveExpense) -> Result<(), sqlx::Error>;
 }
 
@@ -207,10 +208,7 @@ impl ExpenseOperation for ExpenseRepository {
             .fetch_all(&mut *tx)
             .await?
             .iter()
-            .filter_map(|row| {
-                let id: i32 = row.try_get(0).unwrap();
-                Some(id)
-            })
+            .map(|row| row.try_get(0).unwrap())
             .collect::<Vec<i32>>();
 
         drop(expense_query);
