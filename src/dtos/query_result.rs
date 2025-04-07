@@ -12,9 +12,9 @@ pub struct SimpleEntity {
 
 /// Represents a record of `tag` table in the database.
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all(serialize = "camelCase"))]
 #[cfg_attr(test, derive(Debug, PartialEq, Eq))]
 #[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct Tag {
     /// The ID of the tag.
     pub id: i64,
@@ -26,6 +26,7 @@ pub struct Tag {
 
 /// Represents a record of `parent_category` table and its children in the database.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
 pub struct ParentCategory {
     /// The ID of the parent category.
     pub id: i64,

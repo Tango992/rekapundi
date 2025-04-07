@@ -8,6 +8,7 @@ use crate::dtos::{
 
 /// The response body to list all categories.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
 pub struct IndexCategoriesResponse {
     /// The list of categories.
     pub categories: Vec<SimpleEntity>,
@@ -16,6 +17,8 @@ pub struct IndexCategoriesResponse {
 /// The response body to list all parent categories.
 #[derive(Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
+#[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
 pub struct IndexParentCategoriesResponse {
     /// The list of parent categories.
     pub parent_categories: Vec<ParentCategory>,
@@ -38,6 +41,7 @@ pub struct IndexTagsQuery {
 
 /// The response body to list all tags.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
 pub struct IndexTagsResponse {
     /// The list of tags.
     pub tags: Vec<Tag>,
@@ -45,6 +49,7 @@ pub struct IndexTagsResponse {
 
 /// The response body to list all wallets.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
 pub struct IndexWalletsResponse {
     /// The list of wallets.
     pub wallets: Vec<SimpleEntity>,
