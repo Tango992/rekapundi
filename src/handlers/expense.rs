@@ -44,7 +44,7 @@ async fn index(
     Query(query): Query<IndexExpenseQuery>,
     State(expense_repository): State<Arc<impl ExpenseOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
-    let expenses = expense_repository.find_all(query).await?;
+    let expenses = expense_repository.find_all(&query).await?;
 
     Ok((StatusCode::OK, Json(IndexExpenseResponse { expenses })))
 }
@@ -88,7 +88,7 @@ async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
 
-    expense_repository.update(id as i32, body).await?;
+    expense_repository.update(id as i32, &body).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -209,7 +209,7 @@ mod tests {
 
         async fn find_all(
             &self,
-            _query: IndexExpenseQuery,
+            _query: &IndexExpenseQuery,
         ) -> Result<Vec<IndexExpenseElement>, SqlxError> {
             Ok(index_expense_response().expenses)
         }
@@ -226,7 +226,7 @@ mod tests {
             Ok(())
         }
 
-        async fn update(&self, _id: i32, _expense: SaveExpense) -> Result<(), SqlxError> {
+        async fn update(&self, _id: i32, _expense: &SaveExpense) -> Result<(), SqlxError> {
             Ok(())
         }
     }

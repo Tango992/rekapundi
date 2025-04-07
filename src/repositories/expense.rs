@@ -28,7 +28,7 @@ pub trait ExpenseOperation {
     /// Finds all expenses from the database.
     async fn find_all(
         &self,
-        query: IndexExpenseQuery,
+        query: &IndexExpenseQuery,
     ) -> Result<Vec<IndexExpenseElement>, sqlx::Error>;
     /// Finds the latest expense from the database.
     async fn find_latest(&self) -> Result<ShowLatestExpense, sqlx::Error>;
@@ -37,14 +37,14 @@ pub trait ExpenseOperation {
     /// Inserts multiple expenses into the database.
     async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
     /// Updates an existing expense in the database.
-    async fn update(&self, id: i32, expense: SaveExpense) -> Result<(), sqlx::Error>;
+    async fn update(&self, id: i32, expense: &SaveExpense) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
 impl ExpenseOperation for ExpenseRepository {
     async fn find_all(
         &self,
-        query: IndexExpenseQuery,
+        query: &IndexExpenseQuery,
     ) -> Result<Vec<IndexExpenseElement>, sqlx::Error> {
         let expenses = query_as!(
             IndexExpenseElement,
@@ -249,7 +249,7 @@ impl ExpenseOperation for ExpenseRepository {
         Ok(())
     }
 
-    async fn update(&self, id: i32, expense: SaveExpense) -> Result<(), sqlx::Error> {
+    async fn update(&self, id: i32, expense: &SaveExpense) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 
         let rows_affected = query!(
