@@ -22,7 +22,7 @@ impl ExpenseRepository {
 
 /// Trait defining operations for the `expense` table.
 #[async_trait]
-pub trait ExpenseOperation {
+pub trait ExpenseOperation: Send + Sync {
     /// Deletes an expense from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds all expenses from the database.

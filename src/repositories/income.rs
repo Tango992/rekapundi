@@ -22,7 +22,7 @@ impl IncomeRepository {
 
 /// Trait defining operations for the `income` table.
 #[async_trait]
-pub trait IncomeOperation {
+pub trait IncomeOperation: Send + Sync {
     /// Deletes an income from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds all incomes from the database.
