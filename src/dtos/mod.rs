@@ -1,4 +1,5 @@
 pub mod expense;
+pub mod income;
 pub mod query_result;
 pub mod util;
 

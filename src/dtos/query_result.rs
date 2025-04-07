@@ -93,3 +93,47 @@ pub struct IndexExpenseElement {
     /// Optional description of the expense.
     pub description: Option<String>,
 }
+
+/// Data transfer object for showing a single income.
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+pub struct ShowIncome {
+    /// The amount of the income.
+    pub amount: i32,
+    /// The date of the income.
+    pub date: String,
+    /// Optional description of the income.
+    pub description: Option<String>,
+    /// The wallet associated with the income.
+    pub wallet: sqlx::types::Json<SimpleEntity>,
+}
+
+/// Data transfer object for showing the latest income.
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+pub struct ShowLatestIncome {
+    /// The identifier of the income.
+    pub id: i32,
+    /// The amount of the income.
+    pub amount: i32,
+    /// The date of the income.
+    pub date: String,
+    /// Optional description of the income.
+    pub description: Option<String>,
+    /// The wallet associated with the income.
+    pub wallet: sqlx::types::Json<SimpleEntity>,
+}
+
+/// Data transfer object to show the list of incomes.
+#[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+pub struct IndexIncomeElement {
+    /// The ID of the income.
+    pub id: i32,
+    /// The amount of the income.
+    pub amount: i32,
+    /// The date of the income.
+    pub date: String,
+    /// Optional description of the income.
+    pub description: Option<String>,
+}

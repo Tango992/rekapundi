@@ -52,7 +52,7 @@ impl ExpenseOperation for ExpenseRepository {
             SELECT
                 id,
                 amount,
-                TO_CHAR(date, 'YYYY-MM-DD') AS "date!: String",
+                TO_CHAR(date, 'YYYY-MM-DD') AS "date!",
                 description
             FROM
                 expense
@@ -93,7 +93,7 @@ impl ExpenseOperation for ExpenseRepository {
             SELECT
                 e.id,
                 e.amount,
-                TO_CHAR(e.date, 'YYYY-MM-DD') AS "date!: String",
+                TO_CHAR(e.date, 'YYYY-MM-DD') AS "date!",
                 e.description,
                 e.priority,
                 JSONB_BUILD_OBJECT(
@@ -142,7 +142,7 @@ impl ExpenseOperation for ExpenseRepository {
             r#"
             SELECT
                 e.amount,
-                TO_CHAR(e.date, 'YYYY-MM-DD') AS "date!: String",
+                TO_CHAR(e.date, 'YYYY-MM-DD') AS "date!",
                 e.description,
                 e.priority,
                 JSONB_BUILD_OBJECT(
