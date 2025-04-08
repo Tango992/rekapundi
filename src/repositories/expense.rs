@@ -35,7 +35,7 @@ pub trait RepositoryOperation: Send + Sync {
     /// Finds a specific expense by ID from the database.
     async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error>;
     /// Inserts multiple expenses into the database.
-    async fn insert_bulk(&self, expenses: &Vec<SaveExpense>) -> Result<(), sqlx::Error>;
+    async fn insert_bulk(&self, expenses: &[SaveExpense]) -> Result<(), sqlx::Error>;
     /// Updates an existing expense in the database.
     async fn update(&self, id: i32, expense: &SaveExpense) -> Result<(), sqlx::Error>;
 }
@@ -185,7 +185,7 @@ impl RepositoryOperation for Repository {
         Ok(latest_expense)
     }
 
-    async fn insert_bulk(&self, expenses: &Vec<SaveExpense>) -> Result<(), sqlx::Error> {
+    async fn insert_bulk(&self, expenses: &[SaveExpense]) -> Result<(), sqlx::Error> {
         let mut expense_query = QueryBuilder::<Postgres>::new(
             "INSERT INTO expense (amount, date, description, category_id, wallet_id, priority) ",
         );

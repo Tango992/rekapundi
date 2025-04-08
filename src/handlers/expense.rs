@@ -221,7 +221,7 @@ mod tests {
             Ok(show_expense_response(id))
         }
 
-        async fn insert_bulk(&self, _expenses: &Vec<SaveExpense>) -> Result<(), SqlxError> {
+        async fn insert_bulk(&self, _expenses: &[SaveExpense]) -> Result<(), SqlxError> {
             Ok(())
         }
 
