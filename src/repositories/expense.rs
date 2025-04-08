@@ -8,12 +8,12 @@ use crate::dtos::{
 };
 
 /// Repository to interact with the `expense` table in the database.
-pub struct ExpenseRepository {
+pub struct Repository {
     /// The PostgreSQL connection pool.
     pool: Arc<PgPool>,
 }
 
-impl ExpenseRepository {
+impl Repository {
     /// Creates a new `ExpenseRepository` instance.
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
@@ -22,7 +22,7 @@ impl ExpenseRepository {
 
 /// Trait defining operations for the `expense` table.
 #[async_trait]
-pub trait ExpenseOperation: Send + Sync {
+pub trait RepositoryOperation: Send + Sync {
     /// Deletes an expense from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds all expenses from the database.
@@ -35,13 +35,13 @@ pub trait ExpenseOperation: Send + Sync {
     /// Finds a specific expense by ID from the database.
     async fn find_one(&self, id: i32) -> Result<ShowExpense, sqlx::Error>;
     /// Inserts multiple expenses into the database.
-    async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error>;
+    async fn insert_bulk(&self, expenses: &Vec<SaveExpense>) -> Result<(), sqlx::Error>;
     /// Updates an existing expense in the database.
     async fn update(&self, id: i32, expense: &SaveExpense) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
-impl ExpenseOperation for ExpenseRepository {
+impl RepositoryOperation for Repository {
     async fn find_all(
         &self,
         query: &IndexExpenseQuery,
@@ -185,12 +185,12 @@ impl ExpenseOperation for ExpenseRepository {
         Ok(latest_expense)
     }
 
-    async fn insert_bulk(&self, expenses: Vec<SaveExpense>) -> Result<(), sqlx::Error> {
+    async fn insert_bulk(&self, expenses: &Vec<SaveExpense>) -> Result<(), sqlx::Error> {
         let mut expense_query = QueryBuilder::<Postgres>::new(
             "INSERT INTO expense (amount, date, description, category_id, wallet_id, priority) ",
         );
 
-        expense_query.push_values(&expenses, |mut builder, expense| {
+        expense_query.push_values(expenses, |mut builder, expense| {
             builder
                 .push_bind(expense.amount as i32)
                 .push_bind(expense.date)

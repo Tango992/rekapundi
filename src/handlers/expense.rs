@@ -12,11 +12,11 @@ use validator::Validate;
 use crate::{
     common::errors::AppError,
     dtos::expense::{IndexExpenseQuery, IndexExpenseResponse, SaveBatchExpense, SaveExpense},
-    repositories::expense::ExpenseOperation,
+    repositories::expense,
 };
 
 /// Handles the routes related to expenses operations.
-pub fn expense_routes() -> Router<Arc<dyn ExpenseOperation>> {
+pub fn expense_routes() -> Router<Arc<dyn expense::RepositoryOperation>> {
     Router::new().nest(
         "/expenses",
         Router::new()
@@ -32,7 +32,7 @@ pub fn expense_routes() -> Router<Arc<dyn ExpenseOperation>> {
 /// Handles the deletion of a specific expense by ID.
 async fn destroy(
     WithRejection(Path(id), _): WithRejection<Path<u32>, AppError>,
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
     expense_repository.delete(id as i32).await?;
 
@@ -42,7 +42,7 @@ async fn destroy(
 /// Handles showing the list of expenses.
 async fn index(
     Query(query): Query<IndexExpenseQuery>,
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
     let expenses = expense_repository.find_all(&query).await?;
 
@@ -51,12 +51,12 @@ async fn index(
 
 /// Handles the bulk save of expenses.
 async fn save_bulk(
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveBatchExpense>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
 
-    expense_repository.insert_bulk(body.expenses).await?;
+    expense_repository.insert_bulk(&body.expenses).await?;
 
     Ok(StatusCode::CREATED)
 }
@@ -64,7 +64,7 @@ async fn save_bulk(
 /// Handles the retrieval of a specific expense by ID.
 async fn show(
     WithRejection(Path(id), _): WithRejection<Path<u32>, AppError>,
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
     let expense = expense_repository.find_one(id as i32).await?;
 
@@ -73,7 +73,7 @@ async fn show(
 
 /// Handles the retrieval of the latest expense.
 async fn show_latest(
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
 ) -> Result<impl IntoResponse, AppError> {
     let latest_expense = expense_repository.find_latest().await?;
 
@@ -83,7 +83,7 @@ async fn show_latest(
 /// Handles the update of a specific expense by ID.
 async fn update(
     WithRejection(Path(id), _): WithRejection<Path<u32>, AppError>,
-    State(expense_repository): State<Arc<dyn ExpenseOperation>>,
+    State(expense_repository): State<Arc<dyn expense::RepositoryOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveExpense>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
@@ -105,7 +105,6 @@ mod tests {
             },
         },
         handlers::expense::{destroy, index, save_bulk, show, show_latest, update},
-        repositories::expense::ExpenseOperation,
     };
 
     use async_trait::async_trait;
@@ -202,7 +201,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl ExpenseOperation for MockExpenseRepository {
+    impl expense::RepositoryOperation for MockExpenseRepository {
         async fn delete(&self, _id: i32) -> Result<(), SqlxError> {
             Ok(())
         }
@@ -222,7 +221,7 @@ mod tests {
             Ok(show_expense_response(id))
         }
 
-        async fn insert_bulk(&self, _expenses: Vec<SaveExpense>) -> Result<(), SqlxError> {
+        async fn insert_bulk(&self, _expenses: &Vec<SaveExpense>) -> Result<(), SqlxError> {
             Ok(())
         }
 

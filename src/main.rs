@@ -7,7 +7,7 @@ mod repositories;
 use axum::{Router, http::StatusCode, routing::get};
 use common::trace::http_trace_layer;
 use handlers::{expense::expense_routes, util::util_routes};
-use repositories::{expense::ExpenseRepository, util::UtilRepository};
+use repositories::{expense, util};
 use std::{env, sync::Arc};
 use tower_http::compression::CompressionLayer;
 use tracing::info;
@@ -17,8 +17,8 @@ async fn main() {
     common::trace::init();
     let pg_pool = Arc::new(common::database::init().await.unwrap());
 
-    let expense_repository = Arc::new(ExpenseRepository::new(Arc::clone(&pg_pool)));
-    let util_repository = Arc::new(UtilRepository::new(Arc::clone(&pg_pool)));
+    let expense_repository = Arc::new(expense::Repository::new(Arc::clone(&pg_pool)));
+    let util_repository = Arc::new(util::Repository::new(Arc::clone(&pg_pool)));
 
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))

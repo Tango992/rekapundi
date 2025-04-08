@@ -6,12 +6,12 @@ use crate::dtos::query_result::{ParentCategory, SimpleEntity, Tag};
 
 /// Repository to interact with other supporting tables in the database.
 /// This includes tables like `category`, `tag`, and `wallet`.
-pub struct UtilRepository {
+pub struct Repository {
     /// The PostgreSQL connection pool.
     pool: Arc<PgPool>,
 }
 
-impl UtilRepository {
+impl Repository {
     /// Creates a new `UtilRepository` instance.
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
@@ -19,7 +19,7 @@ impl UtilRepository {
 }
 
 #[async_trait]
-pub trait UtilOperation {
+pub trait RepositoryOperation: Send + Sync {
     /// Finds multiple categories from the database.
     /// The result is paginated based on the provided offset and limit.
     async fn find_many_categories(
@@ -55,7 +55,7 @@ pub trait UtilOperation {
 }
 
 #[async_trait]
-impl UtilOperation for UtilRepository {
+impl RepositoryOperation for Repository {
     async fn find_many_categories(
         &self,
         offset: i64,
