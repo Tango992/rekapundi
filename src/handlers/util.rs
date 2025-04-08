@@ -16,10 +16,10 @@ use crate::{
             IndexTagsResponse, IndexWalletsResponse,
         },
     },
-    repositories::util::{UtilOperation, UtilRepository},
+    repositories::util,
 };
 
-pub fn util_routes() -> Router<Arc<UtilRepository>> {
+pub fn util_routes() -> Router<Arc<dyn util::RepositoryOperation>> {
     Router::new()
         .route("/categories", get(index_categories))
         .route("/parent-categories", get(index_parent_categories))
@@ -29,7 +29,7 @@ pub fn util_routes() -> Router<Arc<UtilRepository>> {
 
 /// Handler to list all categories.
 async fn index_categories(
-    State(util_repository): State<Arc<impl UtilOperation>>,
+    State(util_repository): State<Arc<dyn util::RepositoryOperation>>,
     Query(query): Query<Pagination>,
 ) -> Result<impl IntoResponse, AppError> {
     let categories = util_repository
@@ -41,7 +41,7 @@ async fn index_categories(
 
 /// Handler to list all parent categories.
 async fn index_parent_categories(
-    State(util_repository): State<Arc<impl UtilOperation>>,
+    State(util_repository): State<Arc<dyn util::RepositoryOperation>>,
     Query(query): Query<Pagination>,
 ) -> Result<impl IntoResponse, AppError> {
     let parent_categories = util_repository
@@ -56,7 +56,7 @@ async fn index_parent_categories(
 
 /// Handler to list all tags.
 async fn index_tags(
-    State(util_repository): State<Arc<impl UtilOperation>>,
+    State(util_repository): State<Arc<dyn util::RepositoryOperation>>,
     Query(query): Query<IndexTagsQuery>,
 ) -> Result<impl IntoResponse, AppError> {
     let tags = util_repository
@@ -72,7 +72,7 @@ async fn index_tags(
 
 /// Handler to list all wallets.
 async fn index_wallets(
-    State(util_repository): State<Arc<impl UtilOperation>>,
+    State(util_repository): State<Arc<dyn util::RepositoryOperation>>,
     Query(query): Query<Pagination>,
 ) -> Result<impl IntoResponse, AppError> {
     let wallets = util_repository
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl UtilOperation for MockUtilRepository {
+    impl util::RepositoryOperation for MockUtilRepository {
         async fn find_many_categories(
             &self,
             _offset: i64,

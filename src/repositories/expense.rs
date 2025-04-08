@@ -8,12 +8,12 @@ use crate::dtos::{
 };
 
 /// Repository to interact with the `expense` table in the database.
-pub struct ExpenseRepository {
+pub struct Repository {
     /// The PostgreSQL connection pool.
     pool: Arc<PgPool>,
 }
 
-impl ExpenseRepository {
+impl Repository {
     /// Creates a new `ExpenseRepository` instance.
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
@@ -22,7 +22,7 @@ impl ExpenseRepository {
 
 /// Trait defining operations for the `expense` table.
 #[async_trait]
-pub trait ExpenseOperation {
+pub trait RepositoryOperation: Send + Sync {
     /// Deletes an expense from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds all expenses from the database.
@@ -41,7 +41,7 @@ pub trait ExpenseOperation {
 }
 
 #[async_trait]
-impl ExpenseOperation for ExpenseRepository {
+impl RepositoryOperation for Repository {
     async fn find_all(
         &self,
         query: IndexExpenseQuery,
