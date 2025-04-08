@@ -8,12 +8,12 @@ use crate::dtos::{
 };
 
 /// Repository to interact with the `income` table in the database.
-pub struct IncomeRepository {
+pub struct Repository {
     /// The PostgreSQL connection pool.
     pool: Arc<PgPool>,
 }
 
-impl IncomeRepository {
+impl Repository {
     /// Creates a new `IncomeRepository` instance.
     pub fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
@@ -22,7 +22,7 @@ impl IncomeRepository {
 
 /// Trait defining operations for the `income` table.
 #[async_trait]
-pub trait IncomeOperation: Send + Sync {
+pub trait RepositoryOperation: Send + Sync {
     /// Deletes an income from the database.
     async fn delete(&self, id: i32) -> Result<(), sqlx::Error>;
     /// Finds all incomes from the database.
@@ -41,7 +41,7 @@ pub trait IncomeOperation: Send + Sync {
 }
 
 #[async_trait]
-impl IncomeOperation for IncomeRepository {
+impl RepositoryOperation for Repository {
     async fn find_all(
         &self,
         query: &IndexIncomeQuery,
