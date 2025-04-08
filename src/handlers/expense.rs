@@ -56,7 +56,7 @@ async fn save_bulk(
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
 
-    expense_repository.insert_bulk(body.expenses).await?;
+    expense_repository.insert_bulk(&body.expenses).await?;
 
     Ok(StatusCode::CREATED)
 }
@@ -88,7 +88,7 @@ async fn update(
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
 
-    expense_repository.update(id as i32, body).await?;
+    expense_repository.update(id as i32, &body).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -221,11 +221,11 @@ mod tests {
             Ok(show_expense_response(id))
         }
 
-        async fn insert_bulk(&self, _expenses: Vec<SaveExpense>) -> Result<(), SqlxError> {
+        async fn insert_bulk(&self, _expenses: &Vec<SaveExpense>) -> Result<(), SqlxError> {
             Ok(())
         }
 
-        async fn update(&self, _id: i32, _expense: SaveExpense) -> Result<(), SqlxError> {
+        async fn update(&self, _id: i32, _expense: &SaveExpense) -> Result<(), SqlxError> {
             Ok(())
         }
     }
