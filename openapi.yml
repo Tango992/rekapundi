@@ -27,10 +27,20 @@ paths:
           description: Success.
         "400":
           description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
         "409":
           description: Some foreign key associations are invalid.
+        "422":
+          description: Semantic error on the request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     get:
       tags: [expenses]
       summary: Show a list of expenses.
@@ -94,12 +104,16 @@ paths:
       responses:
         "204":
           description: Success.
-        "400":
-          description: Invalid path parameter type.
         "401":
           description: Unauthorized.
         "404":
           description: Expense ID doesn't exists.
+        "422":
+          description: Invalid path parameter semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     put:
       tags: [expenses]
       summary: Update an expense record.
@@ -119,11 +133,23 @@ paths:
         "204":
           description: Success.
         "400":
-          description: Invalid path parameter type or request body.
+          description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
         "404":
           description: Expense ID doesn't exists.
+        "409":
+          description: Invalid foreign key association.
+        "422":
+          description: Semantic error on request body or path parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     get:
       tags: [expenses]
       summary: Show an expense record.
@@ -140,12 +166,16 @@ paths:
       responses:
         "200":
           $ref: "#/components/responseBodies/ShowExpense"
-        "400":
-          description: Invalid path parameter type.
         "401":
           description: Unauthorized.
         "404":
           description: Expense ID doesn't exists.
+        "422":
+          description: Semantic error on path parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
   /expenses/latest:
     get:
       tags: [expenses]
@@ -175,10 +205,20 @@ paths:
           description: Success.
         "400":
           description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
         "409":
-          description: Some foreign key associations are invalid.
+          description: Invalid foreign key association.
+        "422":
+          description: Semantic error on request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     get:
       tags: [incomes]
       summary: Show a list of incomes.
@@ -242,12 +282,16 @@ paths:
       responses:
         "204":
           description: Success.
-        "400":
-          description: Invalid path parameter type.
         "401":
           description: Unauthorized.
         "404":
           description: Income ID doesn't exists.
+        "422":
+          description: Invalid path parameter semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     put:
       tags: [incomes]
       summary: Update an income record.
@@ -267,11 +311,23 @@ paths:
         "204":
           description: Success.
         "400":
-          description: Invalid path parameter type or request body.
+          description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
         "404":
           description: Income ID doesn't exists.
+        "409":
+          description: Invalid foreign key association.
+        "422":
+          description: Invalid request body or path parameter semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
     get:
       tags: [incomes]
       summary: Show an income record.
@@ -288,12 +344,16 @@ paths:
       responses:
         "200":
           $ref: "#/components/responseBodies/ShowIncome"
-        "400":
-          description: Invalid path parameter type.
         "401":
           description: Unauthorized.
         "404":
           description: Income ID doesn't exists.
+        "422":
+          description: Invalid path parameter semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
   /incomes/latest:
     get:
       tags: [incomes]
@@ -448,8 +508,18 @@ paths:
           $ref: "#/components/responseBodies/SummaryRaw"
         "400":
           description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
+        "422":
+          description: Invalid request body semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
   /summaries/generate/chart:
     post:
       tags: [summaries]
@@ -462,8 +532,18 @@ paths:
           $ref: "#/components/responseBodies/SummaryChart"
         "400":
           description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
+        "422":
+          description: Invalid request body semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
 
   /health:
     get:
@@ -806,6 +886,14 @@ components:
           type: number
           required: [expense, income, incomeToExpenseRatio]
       required: [expense, income, incomeToExpenseRatio]
+
+    ClientRelatedError:
+      type: object
+      properties:
+        message:
+          description: The error message that explains the invalid request.
+          type: string
+      required: message
 
   requestBodies:
     UpdateExpense:
