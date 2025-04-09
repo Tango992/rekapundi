@@ -766,11 +766,13 @@ components:
             The start date as the higher bound (inclusive) of the summary.
           type: string
           format: date
-        includeMoneyMigration:
+        excludeCategoryIds:
           description: |
-            Whether the summary should include money migrations between wallets.
-          type: boolean
-      required: [startDate, endDate, includeMoneyMigration]
+            The IDs of categories to exclude from the summary.
+          type: array
+          items:
+            type: integer
+      required: [startDate, endDate, excludeCategoryIds]
     GenerateSummaryChart:
       allOf:
         - $ref: "#/components/schemas/GenerateSummary"
