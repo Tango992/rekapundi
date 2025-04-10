@@ -19,7 +19,7 @@ pub struct SaveExpense {
     /// The priority level of the expense.
     /// 0: high, 1: medium, 2: low
     #[validate(range(min = 0, max = 2, message = "Priority must be between 0 and 2"))]
-    pub priority: u8,
+    pub priority: u32,
     /// The ID of the category associated with the expense.
     pub category_id: u32,
     /// The ID of the wallet associated with the expense.
