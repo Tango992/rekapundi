@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, de};
 use time::{Date, macros::format_description};
 
 /// Deserialize a raw input into a [`time::Date`] object.
@@ -8,7 +8,7 @@ where
 {
     let date_str = Deserialize::deserialize(deserializer)?;
     let format = format_description!("[year]-[month]-[day]");
-    Date::parse(date_str, &format).map_err(serde::de::Error::custom)
+    Date::parse(date_str, &format).map_err(de::Error::custom)
 }
 
 /// Deserialize a raw optional input into a [`time::Date`] object.
@@ -52,6 +52,36 @@ where
     }
 }
 
+/// Deserialize a raw input into a positive integer.
+/// Invalid input will result in an error.
+pub fn positive_int<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = i32::deserialize(deserializer)?;
+    if value < 1 {
+        return Err(de::Error::custom("Value must be positive"));
+    }
+
+    Ok(value)
+}
+
+/// Deserialize a raw input into a vector of positive integers.
+/// Invalid input will result in an error.
+pub fn positive_int_vec<'de, D>(deserializer: D) -> Result<Vec<i32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let values = Vec::<i32>::deserialize(deserializer)?;
+    for &value in &values {
+        if value < 1 {
+            return Err(de::Error::custom("Value must be positive"));
+        }
+    }
+
+    Ok(values)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,6 +110,18 @@ mod tests {
     struct NullableTestStruct {
         #[serde(deserialize_with = "bool_with_fallback")]
         nullable: Option<bool>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct PositiveIntTestStruct {
+        #[serde(deserialize_with = "positive_int")]
+        value: i32,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct PositiveIntVecTestStruct {
+        #[serde(deserialize_with = "positive_int_vec")]
+        values: Vec<i32>,
     }
 
     #[test]
@@ -176,5 +218,92 @@ mod tests {
         let result = serde_json::from_str::<NullableTestStruct>(json_str);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().nullable, None);
+    }
+
+    #[test]
+    fn test_positive_int_happy() {
+        let json_str = r#"{
+            "value": 10
+        }"#;
+        let test_struct: PositiveIntTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.value, 10);
+    }
+
+    #[test]
+    fn test_positive_int_zero() {
+        let json_str = r#"{
+            "value": 0
+        }"#;
+        let result = serde_json::from_str::<PositiveIntTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_positive_int_negative() {
+        let json_str = r#"{
+            "value": -5
+        }"#;
+        let result = serde_json::from_str::<PositiveIntTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_positive_int_vec_happy() {
+        let json_str = r#"{
+            "values": [1, 5, 10, 42]
+        }"#;
+        let test_struct: PositiveIntVecTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.values, vec![1, 5, 10, 42]);
+    }
+
+    #[test]
+    fn test_positive_int_vec_empty() {
+        let json_str = r#"{
+            "values": []
+        }"#;
+        let test_struct: PositiveIntVecTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.values, Vec::<i32>::new());
+    }
+
+    #[test]
+    fn test_positive_int_vec_with_zero() {
+        let json_str = r#"{
+            "values": [1, 0, 5]
+        }"#;
+        let result = serde_json::from_str::<PositiveIntVecTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_positive_int_vec_with_negative() {
+        let json_str = r#"{
+            "values": [10, -5, 20]
+        }"#;
+        let result = serde_json::from_str::<PositiveIntVecTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
     }
 }
