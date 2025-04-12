@@ -884,10 +884,7 @@ components:
                     required: [amount, name]
               required: [wallets]
           required: [amount, groupedSummary]
-        incomeToExpenseRatio:
-          type: number
-          required: [expense, income, incomeToExpenseRatio]
-      required: [expense, income, incomeToExpenseRatio]
+      required: [expense, income]
 
     ClientRelatedError:
       type: object
