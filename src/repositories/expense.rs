@@ -192,12 +192,12 @@ impl RepositoryOperation for Repository {
 
         expense_query.push_values(expenses, |mut builder, expense| {
             builder
-                .push_bind(expense.amount as i32)
+                .push_bind(expense.amount)
                 .push_bind(expense.date)
                 .push_bind(expense.description.clone())
-                .push_bind(expense.category_id as i32)
-                .push_bind(expense.wallet_id as i32)
-                .push_bind(expense.priority as i16);
+                .push_bind(expense.category_id)
+                .push_bind(expense.wallet_id)
+                .push_bind(expense.priority);
         });
         expense_query.push(" RETURNING id");
 
@@ -226,7 +226,7 @@ impl RepositoryOperation for Repository {
 
             for tag_id in expense_tag_ids {
                 is_expense_tag_query_empty = false;
-                expense_tag_values.push((expense_id, *tag_id as i32));
+                expense_tag_values.push((expense_id, *tag_id));
             }
         }
 
@@ -263,12 +263,12 @@ impl RepositoryOperation for Repository {
                 priority = $6
             WHERE id = $7
             "#,
-            expense.amount as i32,
+            expense.amount,
             expense.date,
             expense.description.clone(),
-            expense.category_id as i32,
-            expense.wallet_id as i32,
-            expense.priority as i16,
+            expense.category_id,
+            expense.wallet_id,
+            expense.priority,
             id
         )
         .execute(&mut *tx)
@@ -293,7 +293,7 @@ impl RepositoryOperation for Repository {
         let mut expense_tag_query =
             QueryBuilder::<Postgres>::new("INSERT INTO expense_tag (expense_id, tag_id) ");
         expense_tag_query.push_values(&expense.tag_ids, |mut builder, tag_id| {
-            builder.push_bind(id).push_bind(*tag_id as i32);
+            builder.push_bind(id).push_bind(*tag_id);
         });
 
         expense_tag_query.build().execute(&mut *tx).await?;

@@ -8,9 +8,11 @@ use validator::Validate;
 /// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
 #[derive(Deserialize, Validate)]
 #[serde(rename_all(deserialize = "camelCase"))]
+#[cfg_attr(test, derive(Debug))]
 pub struct SaveExpense {
     /// The amount of the expense.
-    pub amount: u32,
+    #[serde(deserialize_with = "deserializer::positive_int")]
+    pub amount: i32,
     /// The date of the expense.
     #[serde(deserialize_with = "deserializer::date")]
     pub date: Date,
@@ -19,13 +21,16 @@ pub struct SaveExpense {
     /// The priority level of the expense.
     /// 0: high, 1: medium, 2: low
     #[validate(range(min = 0, max = 2, message = "Priority must be between 0 and 2"))]
-    pub priority: u32,
+    pub priority: i32,
     /// The ID of the category associated with the expense.
-    pub category_id: u32,
+    #[serde(deserialize_with = "deserializer::positive_int")]
+    pub category_id: i32,
     /// The ID of the wallet associated with the expense.
-    pub wallet_id: u32,
+    #[serde(deserialize_with = "deserializer::positive_int")]
+    pub wallet_id: i32,
     /// The IDs of the tags associated with the expense.
-    pub tag_ids: Vec<u32>,
+    #[serde(deserialize_with = "deserializer::positive_int_vec")]
+    pub tag_ids: Vec<i32>,
 }
 
 /// Data transfer object for saving a batch of expenses.
@@ -308,5 +313,156 @@ mod tests {
         assert_eq!(query.end_date, None);
         assert_eq!(query.pagination.limit(), 25);
         assert_eq!(query.pagination.offset(), 0);
+    }
+
+    #[test]
+    fn test_save_expense_invalid_amount() {
+        let json_str = r#"{
+            "amount": -100,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": []
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_zero_amount() {
+        let json_str = r#"{
+            "amount": 0,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": []
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_invalid_category_id() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 0,
+            "walletId": 1,
+            "tagIds": []
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_invalid_wallet_id() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": -5,
+            "tagIds": []
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_invalid_tag_ids() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": [1, 2, 0, 4]
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_negative_tag_ids() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": [1, -3, 4]
+        }"#;
+
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_expense_empty_tag_ids() {
+        let json_str = r#"{
+            "amount": 1000,
+            "date": "2025-04-01",
+            "description": "Test expense",
+            "priority": 1,
+            "categoryId": 1,
+            "walletId": 1,
+            "tagIds": []
+        }"#;
+
+        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
+        assert_eq!(expense.tag_ids, Vec::<i32>::new());
+
+        let validation_result = expense.validate();
+        assert!(validation_result.is_ok());
     }
 }
