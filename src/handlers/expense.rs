@@ -96,30 +96,21 @@ async fn update(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        dtos::{
-            Pagination,
-            expense::{IndexExpenseQuery, SaveBatchExpense, SaveExpense},
-            query_result::{
-                IndexExpenseElement, ShowExpense, ShowLatestExpense, SimpleEntity, Tag,
-            },
-        },
-        handlers::expense::{destroy, index, save_bulk, show, show_latest, update},
+    use crate::dtos::{
+        expense::{IndexExpenseQuery, SaveExpense},
+        query_result::{IndexExpenseElement, ShowExpense, ShowLatestExpense, SimpleEntity, Tag},
     };
 
     use async_trait::async_trait;
     use axum::{
-        Json,
-        body::to_bytes,
-        extract::{Path, Query, State},
+        body::{Body, to_bytes},
+        extract::Request,
         http::StatusCode,
-        response::IntoResponse,
     };
-    use axum_extra::extract::WithRejection;
     use serde_json;
     use sqlx::Error as SqlxError;
-    use std::{marker::PhantomData, sync::Arc};
-    use time::Date;
+    use std::sync::Arc;
+    use tower::{Service, ServiceExt};
 
     pub struct MockExpenseRepository;
 
@@ -235,36 +226,49 @@ mod tests {
         // Prepare
         let repo = MockExpenseRepository::new();
 
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("DELETE")
+            .uri("/expenses/1")
+            .body(axum::body::Body::empty())
+            .unwrap();
+
         // Execute
-        let result = destroy(
-            WithRejection(Path(1), PhantomData::<crate::handlers::expense::AppError>),
-            State(repo),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        assert_eq!(result.into_response().status(), StatusCode::NO_CONTENT);
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
     #[tokio::test]
     async fn test_index_handler() {
         // Prepare
         let repo = MockExpenseRepository::new();
-        let query = IndexExpenseQuery {
-            start_date: None,
-            end_date: None,
-            pagination: Pagination::default(),
-        };
+
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        // let result = index(Query(query), State(repo)).await;
+        let request = Request::builder()
+            .method("GET")
+            .uri("/expenses")
+            .body(axum::body::Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index(Query(query), State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -278,32 +282,38 @@ mod tests {
         // Prepare
         let repo = MockExpenseRepository::new();
 
-        let bulk_expense = SaveBatchExpense {
-            expenses: vec![SaveExpense {
-                amount: 1000,
-                date: Date::from_calendar_date(2025, time::Month::April, 1).unwrap(),
-                description: Some("Test expense".to_string()),
-                priority: 1,
-                category_id: 1,
-                wallet_id: 1,
-                tag_ids: vec![1, 2],
-            }],
-        };
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        // Use serde_json::json! macro to avoid serialization issues
+        let request = Request::builder()
+            .method("POST")
+            .uri("/expenses")
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "expenses": [{
+                        "amount": 1000,
+                        "date": "2025-04-01",
+                        "description": "Test expense",
+                        "priority": 1,
+                        "categoryId": 1,
+                        "walletId": 1,
+                        "tagIds": [1, 2]
+                    }]
+                })
+                .to_string(),
+            ))
+            .unwrap();
 
         // Execute
-        let result = save_bulk(
-            State(repo),
-            WithRejection(
-                Json(bulk_expense),
-                PhantomData::<crate::handlers::expense::AppError>,
-            ),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::CREATED);
     }
 
@@ -311,16 +321,24 @@ mod tests {
     async fn test_show_handler() {
         // Prepare
         let repo = MockExpenseRepository::new();
-        let with_rejection =
-            WithRejection(Path(1), PhantomData::<crate::handlers::expense::AppError>);
+
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/expenses/1")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = show(with_rejection, State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -334,13 +352,23 @@ mod tests {
         // Prepare
         let repo = MockExpenseRepository::new();
 
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/expenses/latest")
+            .body(Body::empty())
+            .unwrap();
+
         // Execute
-        let result = show_latest(State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -353,33 +381,37 @@ mod tests {
     async fn test_update_handler() {
         // Prepare
         let repo = MockExpenseRepository::new();
-        let with_rejection =
-            WithRejection(Path(1), PhantomData::<crate::handlers::expense::AppError>);
 
-        let update_expense = SaveExpense {
-            amount: 1000,
-            date: Date::from_calendar_date(2025, time::Month::April, 1).unwrap(),
-            description: Some("Updated test expense".to_string()),
-            priority: 1,
-            category_id: 1,
-            wallet_id: 1,
-            tag_ids: vec![1, 2],
-        };
+        let mut app = expense_routes().with_state(repo).into_service();
+
+        // Use serde_json::json! macro to avoid serialization issues
+        let request = Request::builder()
+            .method("PUT")
+            .uri("/expenses/1")
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "amount": 1000,
+                    "date": "2025-04-01",
+                    "description": "Updated test expense",
+                    "priority": 1,
+                    "categoryId": 1,
+                    "walletId": 1,
+                    "tagIds": [1, 2]
+                })
+                .to_string(),
+            ))
+            .unwrap();
 
         // Execute
-        let result = update(
-            with_rejection,
-            State(repo),
-            WithRejection(
-                Json(update_expense),
-                PhantomData::<crate::handlers::expense::AppError>,
-            ),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 }
