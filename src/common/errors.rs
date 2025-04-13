@@ -21,8 +21,6 @@ pub enum AppError {
     JsonRejection(JsonRejection),
     /// Error related to Axum's Path extraction.
     PathRejection(PathRejection),
-    /// Error related to ValidationErrors. This is different from the JsonRejection.
-    ValidationError(validator::ValidationErrors),
     /// Error related to SQLx database operations.
     SqlxError(sqlx::Error),
 }
@@ -36,10 +34,6 @@ impl IntoResponse for AppError {
                 rejection.status(),
                 Some("Invalid path parameter".to_string()),
             ),
-
-            AppError::ValidationError(errors) => {
-                (StatusCode::UNPROCESSABLE_ENTITY, Some(errors.to_string()))
-            }
 
             AppError::SqlxError(error) => match error {
                 sqlx::Error::Database(db_error) => match db_error.kind() {
@@ -82,12 +76,6 @@ impl From<PathRejection> for AppError {
     }
 }
 
-impl From<validator::ValidationErrors> for AppError {
-    fn from(errors: validator::ValidationErrors) -> Self {
-        AppError::ValidationError(errors)
-    }
-}
-
 impl From<sqlx::Error> for AppError {
     fn from(error: sqlx::Error) -> Self {
         AppError::SqlxError(error)
@@ -100,33 +88,11 @@ mod tests {
     use super::*;
     use axum::http::StatusCode;
     use serde::{Deserialize, Serialize};
-    use validator::Validate;
 
     // Test struct for validation errors
-    #[derive(Debug, Validate, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     struct TestUser {
-        #[validate(length(min = 3))]
         username: String,
-    }
-
-    #[test]
-    fn test_from_validation_errors() {
-        let test_user = TestUser {
-            username: "ab".to_string(),
-        };
-
-        let validation_result = test_user.validate();
-
-        let app_error = AppError::from(validation_result.err().unwrap());
-        match app_error {
-            AppError::ValidationError(_) => assert!(true),
-            _ => panic!("Expected ValidationError variant"),
-        }
-
-        assert_eq!(
-            app_error.into_response().status(),
-            StatusCode::UNPROCESSABLE_ENTITY
-        );
     }
 
     #[test]

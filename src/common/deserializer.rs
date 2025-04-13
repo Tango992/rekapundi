@@ -82,6 +82,20 @@ where
     Ok(values)
 }
 
+/// Deserialize a raw input into a priority value.
+/// A valid priority value is between 0 and 2.
+pub fn priority_value<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = i32::deserialize(deserializer)?;
+    if value < 0 || value > 2 {
+        return Err(de::Error::custom("Priority must be between 0 and 2"));
+    }
+
+    Ok(value)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,6 +136,12 @@ mod tests {
     struct PositiveIntVecTestStruct {
         #[serde(deserialize_with = "positive_int_vec")]
         values: Vec<i32>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct PriorityTestStruct {
+        #[serde(deserialize_with = "priority_value")]
+        priority: i32,
     }
 
     #[test]
@@ -304,6 +324,55 @@ mod tests {
                 .unwrap_err()
                 .to_string()
                 .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_priority_value_valid() {
+        let valid_values = [0, 1, 2];
+
+        for value in valid_values {
+            let json_str = format!(
+                r#"{{
+                "priority": {}
+            }}"#,
+                value
+            );
+
+            let test_struct: PriorityTestStruct = serde_json::from_str(&json_str).unwrap();
+            assert_eq!(test_struct.priority, value);
+        }
+    }
+
+    #[test]
+    fn test_priority_value_too_low() {
+        let json_str = r#"{
+            "priority": -1
+        }"#;
+
+        let result = serde_json::from_str::<PriorityTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Priority must be between 0 and 2")
+        );
+    }
+
+    #[test]
+    fn test_priority_value_too_high() {
+        let json_str = r#"{
+            "priority": 3
+        }"#;
+
+        let result = serde_json::from_str::<PriorityTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Priority must be between 0 and 2")
         );
     }
 }

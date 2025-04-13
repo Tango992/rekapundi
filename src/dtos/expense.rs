@@ -2,11 +2,10 @@ use crate::common::deserializer;
 use crate::dtos::{Pagination, query_result::IndexExpenseElement};
 use serde::{Deserialize, Serialize};
 use time::Date;
-use validator::Validate;
 
 /// Data transfer object for saving an expense.
 /// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 #[cfg_attr(test, derive(Debug))]
 pub struct SaveExpense {
@@ -20,7 +19,7 @@ pub struct SaveExpense {
     pub description: Option<String>,
     /// The priority level of the expense.
     /// 0: high, 1: medium, 2: low
-    #[validate(range(min = 0, max = 2, message = "Priority must be between 0 and 2"))]
+    #[serde(deserialize_with = "deserializer::priority_value")]
     pub priority: i32,
     /// The ID of the category associated with the expense.
     #[serde(deserialize_with = "deserializer::positive_int")]
@@ -34,10 +33,9 @@ pub struct SaveExpense {
 }
 
 /// Data transfer object for saving a batch of expenses.
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 pub struct SaveBatchExpense {
     /// The list of expenses to be saved.
-    #[validate(nested)]
     pub expenses: Vec<SaveExpense>,
 }
 
@@ -89,10 +87,9 @@ mod tests {
             "tagIds": []
         }"#;
 
-        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
+        let result = serde_json::from_str::<SaveExpense>(json_str);
 
-        let validation_result = expense.validate();
-        assert!(validation_result.is_ok());
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -107,10 +104,9 @@ mod tests {
             "tagIds": [1, 2, 3]
         }"#;
 
-        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
+        let result = serde_json::from_str::<SaveExpense>(json_str);
 
-        let validation_result = expense.validate();
-        assert!(validation_result.is_err());
+        assert!(result.is_err());
     }
 
     #[test]
@@ -125,8 +121,9 @@ mod tests {
             "tagIds": [1, 2, 3]
         }"#;
 
-        let expense = serde_json::from_str::<SaveExpense>(json_str);
-        assert!(expense.is_err());
+        let result = serde_json::from_str::<SaveExpense>(json_str);
+
+        assert!(result.is_err());
     }
 
     #[test]
@@ -154,10 +151,9 @@ mod tests {
             ]
         }"#;
 
-        let batch: SaveBatchExpense = serde_json::from_str(json_str).unwrap();
+        let res = serde_json::from_str::<SaveBatchExpense>(json_str);
 
-        let validation_result = batch.validate();
-        assert!(validation_result.is_ok());
+        assert!(res.is_ok());
     }
 
     #[test]
@@ -185,10 +181,9 @@ mod tests {
             ]
         }"#;
 
-        let batch: SaveBatchExpense = serde_json::from_str(json_str).unwrap();
+        let result = serde_json::from_str::<SaveBatchExpense>(json_str);
 
-        let validation_result = batch.validate();
-        assert!(validation_result.is_err());
+        assert!(result.is_err());
     }
 
     #[test]
@@ -459,10 +454,8 @@ mod tests {
             "tagIds": []
         }"#;
 
-        let expense: SaveExpense = serde_json::from_str(json_str).unwrap();
-        assert_eq!(expense.tag_ids, Vec::<i32>::new());
+        let result = serde_json::from_str::<SaveExpense>(json_str).unwrap();
 
-        let validation_result = expense.validate();
-        assert!(validation_result.is_ok());
+        assert_eq!(result.tag_ids, Vec::<i32>::new());
     }
 }
