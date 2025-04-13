@@ -12,6 +12,7 @@ authors = [
 async-trait = "0.1.88"
 axum = "0.8.3"
 axum-extra = "0.10.1"
+charming = "0.4.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.140", features = ["raw_value"] }
 sqlx = { version = "0.8", features = [ "json", "postgres", "runtime-tokio", "time" ] }

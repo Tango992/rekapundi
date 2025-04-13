@@ -3,6 +3,7 @@ mod constants;
 mod dtos;
 mod handlers;
 mod repositories;
+mod services;
 
 use axum::{Router, http::StatusCode, routing::get};
 use common::trace::http_trace_layer;
