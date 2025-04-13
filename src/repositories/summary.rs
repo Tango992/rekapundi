@@ -87,8 +87,7 @@ impl RepositoryOperation for SummaryRepository {
                 FROM category_summary cs
                 JOIN parent_category pc ON cs.parent_id = pc.id
                 WHERE cs.amount > 0
-                GROUP BY pc.id, pc.name, cs.amount
-                ORDER BY cs.amount DESC
+                GROUP BY pc.id, pc.name
             ),
             priority_summary AS (
                 SELECT 
