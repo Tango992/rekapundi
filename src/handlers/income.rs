@@ -91,28 +91,21 @@ async fn update(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        dtos::{
-            Pagination,
-            income::{IndexIncomeQuery, SaveBatchIncome, SaveIncome},
-            query_result::{IndexIncomeElement, ShowIncome, ShowLatestIncome, SimpleEntity},
-        },
-        handlers::income::{destroy, index, save_bulk, show, show_latest, update},
+    use crate::dtos::{
+        income::{IndexIncomeQuery, SaveIncome},
+        query_result::{IndexIncomeElement, ShowIncome, ShowLatestIncome, SimpleEntity},
     };
 
     use async_trait::async_trait;
     use axum::{
-        Json,
-        body::to_bytes,
-        extract::{Path, Query, State},
+        body::{Body, to_bytes},
+        extract::Request,
         http::StatusCode,
-        response::IntoResponse,
     };
-    use axum_extra::extract::WithRejection;
     use serde_json;
     use sqlx::Error as SqlxError;
-    use std::{marker::PhantomData, sync::Arc};
-    use time::Date;
+    use std::sync::Arc;
+    use tower::{Service, ServiceExt};
 
     pub struct MockIncomeRepository;
 
@@ -201,36 +194,48 @@ mod tests {
         // Prepare
         let repo = MockIncomeRepository::new();
 
+        let mut app = income_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("DELETE")
+            .uri("/incomes/1")
+            .body(Body::empty())
+            .unwrap();
+
         // Execute
-        let result = destroy(
-            WithRejection(Path(1), PhantomData::<crate::handlers::income::AppError>),
-            State(repo),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        assert_eq!(result.into_response().status(), StatusCode::NO_CONTENT);
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
     #[tokio::test]
     async fn test_index_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-        let query = IndexIncomeQuery {
-            start_date: None,
-            end_date: None,
-            pagination: Pagination::default(),
-        };
+
+        let mut app = income_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/incomes")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index(Query(query), State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -244,29 +249,35 @@ mod tests {
         // Prepare
         let repo = MockIncomeRepository::new();
 
-        let bulk_income = SaveBatchIncome {
-            incomes: vec![SaveIncome {
-                amount: 5000,
-                date: Date::from_calendar_date(2025, time::Month::April, 1).unwrap(),
-                description: Some("Test income".to_string()),
-                wallet_id: 1,
-            }],
-        };
+        let mut app = income_routes().with_state(repo).into_service();
+
+        // Use serde_json::json! macro to create request body
+        let request = Request::builder()
+            .method("POST")
+            .uri("/incomes")
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "incomes": [{
+                        "amount": 5000,
+                        "date": "2025-04-01",
+                        "description": "Test income",
+                        "walletId": 1
+                    }]
+                })
+                .to_string(),
+            ))
+            .unwrap();
 
         // Execute
-        let result = save_bulk(
-            State(repo),
-            WithRejection(
-                Json(bulk_income),
-                PhantomData::<crate::handlers::income::AppError>,
-            ),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::CREATED);
     }
 
@@ -274,16 +285,24 @@ mod tests {
     async fn test_show_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-        let with_rejection =
-            WithRejection(Path(1), PhantomData::<crate::handlers::income::AppError>);
+
+        let mut app = income_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/incomes/1")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = show(with_rejection, State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -297,13 +316,23 @@ mod tests {
         // Prepare
         let repo = MockIncomeRepository::new();
 
+        let mut app = income_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/incomes/latest")
+            .body(Body::empty())
+            .unwrap();
+
         // Execute
-        let result = show_latest(State(repo)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
-
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -316,30 +345,34 @@ mod tests {
     async fn test_update_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-        let with_rejection =
-            WithRejection(Path(1), PhantomData::<crate::handlers::income::AppError>);
 
-        let update_income = SaveIncome {
-            amount: 5000,
-            date: Date::from_calendar_date(2025, time::Month::April, 1).unwrap(),
-            description: Some("Updated test income".to_string()),
-            wallet_id: 1,
-        };
+        let mut app = income_routes().with_state(repo).into_service();
+
+        // Use serde_json::json! macro to create request body
+        let request = Request::builder()
+            .method("PUT")
+            .uri("/incomes/1")
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "amount": 5000,
+                    "date": "2025-04-01",
+                    "description": "Updated test income",
+                    "walletId": 1
+                })
+                .to_string(),
+            ))
+            .unwrap();
 
         // Execute
-        let result = update(
-            with_rejection,
-            State(repo),
-            WithRejection(
-                Json(update_income),
-                PhantomData::<crate::handlers::income::AppError>,
-            ),
-        )
-        .await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 }

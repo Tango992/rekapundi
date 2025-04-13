@@ -87,10 +87,15 @@ mod tests {
     use super::*;
     use crate::dtos::query_result::{ParentCategory, SimpleEntity, Tag};
     use async_trait::async_trait;
-    use axum::{body::to_bytes, http::StatusCode, response::IntoResponse};
+    use axum::{
+        body::{Body, to_bytes},
+        extract::Request,
+        http::StatusCode,
+    };
     use serde_json;
     use sqlx::Error as SqlxError;
     use std::sync::Arc;
+    use tower::{Service, ServiceExt};
 
     pub struct MockUtilRepository;
 
@@ -214,14 +219,24 @@ mod tests {
     async fn test_index_categories_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-        let pagination = Pagination::default();
+
+        let mut app = util_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/categories")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index_categories(State(repo), Query(pagination)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -234,14 +249,24 @@ mod tests {
     async fn test_index_parent_categories_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-        let pagination = Pagination::default();
+
+        let mut app = util_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/parent-categories")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index_parent_categories(State(repo), Query(pagination)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -254,17 +279,24 @@ mod tests {
     async fn test_index_tags_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-        let query = IndexTagsQuery {
-            mark_important_value: Some(true),
-            pagination: Pagination::default(),
-        };
+
+        let mut app = util_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/tags?mark_important_value=true")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index_tags(State(repo), Query(query)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -277,14 +309,24 @@ mod tests {
     async fn test_index_wallets_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-        let pagination = Pagination::default();
+
+        let mut app = util_routes().with_state(repo).into_service();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/wallets")
+            .body(Body::empty())
+            .unwrap();
 
         // Execute
-        let result = index_wallets(State(repo), Query(pagination)).await;
+        let response = ServiceExt::<Request<Body>>::ready(&mut app)
+            .await
+            .unwrap()
+            .call(request)
+            .await
+            .unwrap();
 
         // Assert
-        assert!(result.is_ok());
-        let response = result.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 
         let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
