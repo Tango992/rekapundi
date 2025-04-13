@@ -1,6 +1,7 @@
 pub mod expense;
 pub mod income;
 pub mod query_result;
+pub mod summary;
 pub mod util;
 
 use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};

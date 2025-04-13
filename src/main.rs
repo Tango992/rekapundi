@@ -6,8 +6,10 @@ mod repositories;
 
 use axum::{Router, http::StatusCode, routing::get};
 use common::trace::http_trace_layer;
-use handlers::{expense::expense_routes, income::income_routes, util::util_routes};
-use repositories::{expense, income, util};
+use handlers::{
+    expense::expense_routes, income::income_routes, summary::summary_routes, util::util_routes,
+};
+use repositories::{expense, income, summary, util};
 use std::{env, sync::Arc};
 use tower_http::compression::CompressionLayer;
 use tracing::info;
@@ -19,12 +21,14 @@ async fn main() {
 
     let expense_repository = Arc::new(expense::Repository::new(Arc::clone(&pg_pool)));
     let income_repository = Arc::new(income::Repository::new(Arc::clone(&pg_pool)));
+    let summary_repository = Arc::new(summary::SummaryRepository::new(Arc::clone(&pg_pool)));
     let util_repository = Arc::new(util::Repository::new(Arc::clone(&pg_pool)));
 
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
         .merge(expense_routes().with_state(expense_repository))
         .merge(income_routes().with_state(income_repository))
+        .merge(summary_routes().with_state(summary_repository))
         .merge(util_routes().with_state(util_repository))
         .layer(CompressionLayer::new())
         .layer(http_trace_layer());

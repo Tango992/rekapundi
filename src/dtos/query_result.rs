@@ -138,54 +138,83 @@ pub struct IndexIncomeElement {
     pub description: Option<String>,
 }
 
-#[derive(Serialize)]
+/// Data transfer object for showing a name and amount.
+#[derive(Deserialize, Serialize)]
 pub struct SimpleAmountEntity {
+    /// The name of the entity.
     pub name: String,
+    /// The amount associated with the entity.
     pub amount: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct ExpenseParentCategory {
+    /// The name of the parent category.
     pub name: String,
+    /// The total amount of expenses of this parent category.
     pub amount: i32,
+    /// The list of child categories with their respective amounts.
     pub categories: Vec<SimpleAmountEntity>,
 }
 
-#[derive(Serialize)]
+/// Represents the priority of an expense.
+#[derive(Deserialize, Serialize)]
 pub struct ExpensePriority {
+    /// The level of priority.
+    /// 0: high, 1: medium, 2: low
     pub level: i16,
+    /// The total amount of expenses for this priority level.
     pub amount: i32,
 }
 
-#[derive(Serialize)]
+/// The grouped summary of expenses.
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
 pub struct ExpenseGroupedSummary {
+    /// The grouped summary of expenses by parent category.
     pub parent_categories: Vec<ExpenseParentCategory>,
+    /// The grouped summary of expenses by priority.
     pub priorities: Vec<ExpensePriority>,
 }
 
-#[derive(Serialize)]
+/// The grouped summary of income.
+#[derive(Deserialize, Serialize)]
 pub struct IncomeGroupedSummary {
+    /// The list of wallets with their respective amounts.
     pub wallets: Vec<SimpleAmountEntity>,
 }
 
-#[derive(Serialize)]
+/// Represents the summary of expenses, including the grouped summary.
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
 pub struct ExpenseSummary {
+    /// The total amount of expenses.
     pub amount: i32,
-    pub grouped_summary: ExpenseGroupedSummary,
+    /// The grouped summary of expenses.
+    pub group_summary: ExpenseGroupedSummary,
 }
 
-#[derive(Serialize)]
+/// Represents the summary of income, including the grouped summary.
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
 pub struct IncomeSummary {
+    /// The total amount of income.
     pub amount: i32,
-    pub grouped_summary: IncomeGroupedSummary,
+    /// The grouped summary of income.
+    pub group_summary: IncomeGroupedSummary,
 }
 
+/// The result of the summary query.
 #[derive(Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(test, derive(Deserialize))]
+#[cfg_attr(test, serde(rename_all(deserialize = "camelCase")))]
 pub struct ShowSummary {
+    /// The expense summary.
     pub expense: sqlx::types::Json<ExpenseSummary>,
+    /// The income summary.
     pub income: sqlx::types::Json<IncomeSummary>,
 }
