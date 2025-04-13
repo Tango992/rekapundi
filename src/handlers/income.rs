@@ -7,7 +7,6 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use std::sync::Arc;
-use validator::Validate;
 
 use crate::{
     common::errors::AppError,
@@ -54,8 +53,6 @@ async fn save_bulk(
     State(income_repository): State<Arc<dyn income::RepositoryOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveBatchIncome>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
-    body.validate()?;
-
     income_repository.insert_bulk(body.incomes).await?;
 
     Ok(StatusCode::CREATED)
@@ -86,8 +83,6 @@ async fn update(
     State(income_repository): State<Arc<dyn income::RepositoryOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveIncome>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
-    body.validate()?;
-
     income_repository.update(id as i32, &body).await?;
 
     Ok(StatusCode::NO_CONTENT)

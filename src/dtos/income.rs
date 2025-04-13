@@ -2,29 +2,30 @@ use crate::common::deserializer;
 use crate::dtos::{Pagination, query_result::IndexIncomeElement};
 use serde::{Deserialize, Serialize};
 use time::Date;
-use validator::Validate;
 
 /// Data transfer object for saving an income.
 /// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
+#[cfg_attr(test, derive(Debug))]
 pub struct SaveIncome {
     /// The amount of the income.
-    pub amount: u64,
+    #[serde(deserialize_with = "deserializer::positive_int")]
+    pub amount: i32,
     /// The date of the income.
     #[serde(deserialize_with = "deserializer::date")]
     pub date: Date,
     /// Optional description of the income.
     pub description: Option<String>,
     /// The wallet ID where the income is going to.
-    pub wallet_id: u64,
+    #[serde(deserialize_with = "deserializer::positive_int")]
+    pub wallet_id: i32,
 }
 
 /// Data transfer object for saving a batch of incomes.
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 pub struct SaveBatchIncome {
     /// The list of incomes to be saved.
-    #[validate(nested)]
     pub incomes: Vec<SaveIncome>,
 }
 
@@ -81,6 +82,82 @@ mod tests {
         assert_eq!(save_income.date, expected_date);
         assert_eq!(save_income.description, Some("Salary".to_string()));
         assert_eq!(save_income.wallet_id, 1);
+    }
+
+    #[test]
+    fn test_save_income_zero_amount() {
+        let json_str = r#"{
+            "amount": 0,
+            "date": "2025-04-01",
+            "description": "Salary",
+            "walletId": 1
+        }"#;
+
+        let result = serde_json::from_str::<SaveIncome>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_income_negative_amount() {
+        let json_str = r#"{
+            "amount": -500,
+            "date": "2025-04-01",
+            "description": "Salary",
+            "walletId": 1
+        }"#;
+
+        let result = serde_json::from_str::<SaveIncome>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_income_zero_wallet_id() {
+        let json_str = r#"{
+            "amount": 1500000,
+            "date": "2025-04-01",
+            "description": "Salary",
+            "walletId": 0
+        }"#;
+
+        let result = serde_json::from_str::<SaveIncome>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
+    }
+
+    #[test]
+    fn test_save_income_negative_wallet_id() {
+        let json_str = r#"{
+            "amount": 1500000,
+            "date": "2025-04-01",
+            "description": "Salary",
+            "walletId": -2
+        }"#;
+
+        let result = serde_json::from_str::<SaveIncome>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be positive")
+        );
     }
 
     #[test]

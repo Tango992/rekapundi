@@ -146,10 +146,10 @@ impl RepositoryOperation for Repository {
 
         income_query.push_values(&incomes, |mut builder, income| {
             builder
-                .push_bind(income.amount as i32)
+                .push_bind(income.amount)
                 .push_bind(income.date)
                 .push_bind(income.description.clone())
-                .push_bind(income.wallet_id as i32);
+                .push_bind(income.wallet_id);
         });
 
         let mut tx = self.pool.begin().await?;
@@ -169,10 +169,10 @@ impl RepositoryOperation for Repository {
                 wallet_id = $4
             WHERE id = $5
             "#,
-            income.amount as i32,
+            income.amount,
             income.date,
             income.description.clone(),
-            income.wallet_id as i32,
+            income.wallet_id,
             id
         )
         .execute(&*self.pool)
