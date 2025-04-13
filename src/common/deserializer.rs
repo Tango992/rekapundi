@@ -52,6 +52,19 @@ where
     }
 }
 
+/// Deserialize a raw input into a non-negative integer.
+pub fn non_negative_int<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = i32::deserialize(deserializer)?;
+    if value < 0 {
+        return Err(de::Error::custom("Value must be non-negative"));
+    }
+
+    Ok(value)
+}
+
 /// Deserialize a raw input into a positive integer.
 /// Invalid input will result in an error.
 pub fn positive_int<'de, D>(deserializer: D) -> Result<i32, D::Error>
@@ -124,6 +137,12 @@ mod tests {
     struct NullableTestStruct {
         #[serde(deserialize_with = "bool_with_fallback")]
         nullable: Option<bool>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct NonNegativeIntTestStruct {
+        #[serde(deserialize_with = "non_negative_int")]
+        value: i32,
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
@@ -238,6 +257,39 @@ mod tests {
         let result = serde_json::from_str::<NullableTestStruct>(json_str);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().nullable, None);
+    }
+
+    #[test]
+    fn test_non_negative_int_positive() {
+        let json_str = r#"{
+            "value": 10
+        }"#;
+        let test_struct: NonNegativeIntTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.value, 10);
+    }
+
+    #[test]
+    fn test_non_negative_int_zero() {
+        let json_str = r#"{
+            "value": 0
+        }"#;
+        let test_struct: NonNegativeIntTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.value, 0);
+    }
+
+    #[test]
+    fn test_non_negative_int_negative() {
+        let json_str = r#"{
+            "value": -5
+        }"#;
+        let result = serde_json::from_str::<NonNegativeIntTestStruct>(json_str);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Value must be non-negative")
+        );
     }
 
     #[test]

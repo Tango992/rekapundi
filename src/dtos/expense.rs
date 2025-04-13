@@ -10,7 +10,7 @@ use time::Date;
 #[cfg_attr(test, derive(Debug))]
 pub struct SaveExpense {
     /// The amount of the expense.
-    #[serde(deserialize_with = "deserializer::positive_int")]
+    #[serde(deserialize_with = "deserializer::non_negative_int")]
     pub amount: i32,
     /// The date of the expense.
     #[serde(deserialize_with = "deserializer::date")]
@@ -328,7 +328,7 @@ mod tests {
             result
                 .unwrap_err()
                 .to_string()
-                .contains("Value must be positive")
+                .contains("Value must be non-negative")
         );
     }
 
@@ -345,13 +345,7 @@ mod tests {
         }"#;
 
         let result = serde_json::from_str::<SaveExpense>(json_str);
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Value must be positive")
-        );
+        assert!(result.is_ok());
     }
 
     #[test]

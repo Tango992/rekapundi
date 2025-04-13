@@ -110,7 +110,7 @@ impl RepositoryOperation for SummaryRepository {
             SELECT 
                 JSONB_BUILD_OBJECT(
                     'amount', te.amount,
-                    'grouped_summary', JSONB_BUILD_OBJECT(
+                    'group_summary', JSONB_BUILD_OBJECT(
                         'parent_categories', (
                             SELECT COALESCE(
                                 JSONB_AGG(
@@ -140,7 +140,7 @@ impl RepositoryOperation for SummaryRepository {
                 ) AS "expense!: sqlx::types::Json<ExpenseSummary>",
                 JSONB_BUILD_OBJECT(
                     'amount', ti.amount,
-                    'grouped_summary', JSONB_BUILD_OBJECT(
+                    'group_summary', JSONB_BUILD_OBJECT(
                         'wallets', (
                             SELECT COALESCE(
                                 JSONB_AGG(
