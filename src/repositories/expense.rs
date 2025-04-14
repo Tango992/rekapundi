@@ -280,15 +280,9 @@ impl RepositoryOperation for Repository {
             return Err(sqlx::Error::RowNotFound);
         }
 
-        query!(
-            r#"
-            DELETE FROM expense_tag
-            WHERE expense_id = $1
-            "#,
-            id
-        )
-        .execute(&mut *tx)
-        .await?;
+        query!("DELETE FROM expense_tag WHERE expense_id = $1", id)
+            .execute(&mut *tx)
+            .await?;
 
         let mut expense_tag_query =
             QueryBuilder::<Postgres>::new("INSERT INTO expense_tag (expense_id, tag_id) ");
