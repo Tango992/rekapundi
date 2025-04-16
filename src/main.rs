@@ -6,11 +6,11 @@ mod middlewares;
 mod repositories;
 mod services;
 
-use axum::{Router, http::StatusCode, routing::get};
+use axum::{Router, http::StatusCode, middleware, routing::get};
 use handlers::{
     expense::expense_routes, income::income_routes, summary::summary_routes, util::util_routes,
 };
-use middlewares::trace::http_trace_layer;
+use middlewares::{auth::authenticate_request, trace::http_trace_layer};
 use repositories::{expense, income, summary, util};
 use std::{env, sync::Arc};
 use tower_http::compression::CompressionLayer;
@@ -26,12 +26,16 @@ async fn main() {
     let summary_repository = Arc::new(summary::SummaryRepository::new(Arc::clone(&pg_pool)));
     let util_repository = Arc::new(util::Repository::new(Arc::clone(&pg_pool)));
 
-    let app = Router::new()
-        .route("/health", get(|| async { StatusCode::OK }))
+    let auth_required_router = Router::new()
         .merge(expense_routes().with_state(expense_repository))
         .merge(income_routes().with_state(income_repository))
         .merge(summary_routes().with_state(summary_repository))
         .merge(util_routes().with_state(util_repository))
+        .route_layer(middleware::from_fn(authenticate_request));
+
+    let app = Router::new()
+        .route("/health", get(|| async { StatusCode::OK }))
+        .merge(auth_required_router)
         .layer(CompressionLayer::new())
         .layer(http_trace_layer());
 
