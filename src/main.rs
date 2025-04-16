@@ -2,14 +2,15 @@ mod common;
 mod constants;
 mod dtos;
 mod handlers;
+mod middlewares;
 mod repositories;
 mod services;
 
 use axum::{Router, http::StatusCode, routing::get};
-use common::trace::http_trace_layer;
 use handlers::{
     expense::expense_routes, income::income_routes, summary::summary_routes, util::util_routes,
 };
+use middlewares::trace::http_trace_layer;
 use repositories::{expense, income, summary, util};
 use std::{env, sync::Arc};
 use tower_http::compression::CompressionLayer;
@@ -17,7 +18,7 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() {
-    common::trace::init();
+    middlewares::trace::init();
     let pg_pool = Arc::new(common::database::init().await.unwrap());
 
     let expense_repository = Arc::new(expense::Repository::new(Arc::clone(&pg_pool)));
