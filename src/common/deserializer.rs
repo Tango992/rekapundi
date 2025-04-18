@@ -30,14 +30,21 @@ where
 
 /// Deserialize a raw input into an optional pagination value.
 /// Invalid inputs will be converted to `None`.
-pub fn pagination_value_with_fallback<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+pub fn pagination_value_with_fallback<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    match Deserialize::deserialize(deserializer) {
-        Ok(value) => Ok(Some(value)),
-        Err(_) => Ok(None),
+    let value = Option::<i32>::deserialize(deserializer).unwrap_or(None);
+
+    if value.is_none() {
+        return Ok(None);
     }
+
+    if value < Some(0) {
+        return Ok(None);
+    }
+
+    Ok(value)
 }
 
 /// Deserialize a raw input into an optional boolean value.
@@ -102,7 +109,7 @@ where
     D: serde::Deserializer<'de>,
 {
     let value = i32::deserialize(deserializer)?;
-    if value < 0 || value > 2 {
+    if !(0..=2).contains(&value) {
         return Err(de::Error::custom("Priority must be between 0 and 2"));
     }
 
@@ -130,7 +137,7 @@ mod tests {
     #[derive(Debug, Deserialize, PartialEq)]
     struct PaginationTestStruct {
         #[serde(deserialize_with = "pagination_value_with_fallback")]
-        limit: Option<u32>,
+        limit: Option<i32>,
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
@@ -228,6 +235,15 @@ mod tests {
         }"#;
         let test_struct: PaginationTestStruct = serde_json::from_str(json_str).unwrap();
         assert_eq!(test_struct.limit, Some(10));
+    }
+
+    #[test]
+    fn test_pagination_value_with_fallback_less_than_0() {
+        let json_str = r#"{
+            "limit": -1
+        }"#;
+        let test_struct: PaginationTestStruct = serde_json::from_str(json_str).unwrap();
+        assert_eq!(test_struct.limit, None);
     }
 
     #[test]

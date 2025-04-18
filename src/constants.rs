@@ -1,2 +1,2 @@
 /// Constants for the application
-pub static MAX_PAGINATION_LIMIT: u32 = 100;
+pub static MAX_PAGINATION_LIMIT: i32 = 100;

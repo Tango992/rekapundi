@@ -14,13 +14,13 @@ pub struct Pagination {
         deserialize_with = "deserializer::pagination_value_with_fallback",
         default
     )]
-    limit: Option<u32>,
+    limit: Option<i32>,
     /// The offset for pagination.
     #[serde(
         deserialize_with = "deserializer::pagination_value_with_fallback",
         default
     )]
-    offset: Option<u32>,
+    offset: Option<i32>,
 }
 
 impl Pagination {
