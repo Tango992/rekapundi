@@ -248,7 +248,6 @@ mod tests {
 
         let mut app = expense_routes().with_state(repo).into_service();
 
-        // let result = index(Query(query), State(repo)).await;
         let request = Request::builder()
             .method("GET")
             .uri("/expenses")
