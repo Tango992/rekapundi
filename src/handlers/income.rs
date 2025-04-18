@@ -99,13 +99,12 @@ mod tests {
     use async_trait::async_trait;
     use axum::{
         body::{Body, to_bytes},
-        extract::Request,
-        http::StatusCode,
+        http::{Request, StatusCode},
     };
     use serde_json;
     use sqlx::Error as SqlxError;
     use std::sync::Arc;
-    use tower::{Service, ServiceExt};
+    use tower::ServiceExt;
 
     pub struct MockIncomeRepository;
 
@@ -193,8 +192,7 @@ mod tests {
     async fn test_destroy_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         let request = Request::builder()
             .method("DELETE")
@@ -203,12 +201,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
@@ -218,8 +211,7 @@ mod tests {
     async fn test_index_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -228,12 +220,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -248,8 +235,7 @@ mod tests {
     async fn test_save_bulk_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         // Use serde_json::json! macro to create request body
         let request = Request::builder()
@@ -270,12 +256,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::CREATED);
@@ -285,8 +266,7 @@ mod tests {
     async fn test_show_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -295,12 +275,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -315,8 +290,7 @@ mod tests {
     async fn test_show_latest_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -325,12 +299,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -345,8 +314,7 @@ mod tests {
     async fn test_update_handler() {
         // Prepare
         let repo = MockIncomeRepository::new();
-
-        let mut app = income_routes().with_state(repo).into_service();
+        let app = income_routes().with_state(repo);
 
         // Use serde_json::json! macro to create request body
         let request = Request::builder()
@@ -365,12 +333,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::NO_CONTENT);

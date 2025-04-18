@@ -89,13 +89,12 @@ mod tests {
     use async_trait::async_trait;
     use axum::{
         body::{Body, to_bytes},
-        extract::Request,
-        http::StatusCode,
+        http::{Request, StatusCode},
     };
     use serde_json;
     use sqlx::Error as SqlxError;
     use std::sync::Arc;
-    use tower::{Service, ServiceExt};
+    use tower::ServiceExt;
 
     pub struct MockUtilRepository;
 
@@ -219,8 +218,7 @@ mod tests {
     async fn test_index_categories_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-
-        let mut app = util_routes().with_state(repo).into_service();
+        let app = util_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -229,12 +227,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -249,8 +242,7 @@ mod tests {
     async fn test_index_parent_categories_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-
-        let mut app = util_routes().with_state(repo).into_service();
+        let app = util_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -259,12 +251,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -279,8 +266,7 @@ mod tests {
     async fn test_index_tags_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-
-        let mut app = util_routes().with_state(repo).into_service();
+        let app = util_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -289,12 +275,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
@@ -309,8 +290,7 @@ mod tests {
     async fn test_index_wallets_handler() {
         // Prepare
         let repo = MockUtilRepository::new();
-
-        let mut app = util_routes().with_state(repo).into_service();
+        let app = util_routes().with_state(repo);
 
         let request = Request::builder()
             .method("GET")
@@ -319,12 +299,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);

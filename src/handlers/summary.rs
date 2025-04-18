@@ -38,13 +38,12 @@ mod tests {
     use async_trait::async_trait;
     use axum::{
         body::{Body, to_bytes},
-        extract::Request,
-        http::StatusCode,
+        http::{Request, StatusCode},
     };
     use serde_json;
     use sqlx::Error as SqlxError;
     use std::sync::Arc;
-    use tower::{Service, ServiceExt};
+    use tower::ServiceExt;
 
     pub struct MockSummaryRepository;
 
@@ -137,8 +136,7 @@ mod tests {
     async fn test_generate_handler() {
         // Prepare
         let repo = MockSummaryRepository::new();
-
-        let mut app = summary_routes().with_state(repo).into_service();
+        let app = summary_routes().with_state(repo);
 
         let request = Request::builder()
             .method("POST")
@@ -155,12 +153,7 @@ mod tests {
             .unwrap();
 
         // Execute
-        let response = ServiceExt::<Request<Body>>::ready(&mut app)
-            .await
-            .unwrap()
-            .call(request)
-            .await
-            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
 
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
