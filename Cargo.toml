@@ -4,9 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 repository = "https:/github.com/Tango992/rekapundi"
-authors = [
-    "Daniel Osvaldo Rahmanto <daniel.rahmanto@gmail.com>",
-]
+authors = ["Daniel Osvaldo Rahmanto <daniel.rahmanto@gmail.com>"]
 
 [dependencies]
 async-trait = "0.1.88"
@@ -17,10 +15,16 @@ jsonwebtoken = { version = "9", default-features = false }
 lazy_static = "1.5.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.140", features = ["raw_value"] }
-sqlx = { version = "0.8", features = [ "json", "postgres", "runtime-tokio", "time" ] }
-time = { version = "0.3.41", features = [ "parsing", "serde" ] }
+sqlx = { version = "0.8", features = [
+    "json",
+    "postgres",
+    "runtime-tokio",
+    "time",
+    "tls-native-tls",
+] }
+time = { version = "0.3.41", features = ["parsing", "serde"] }
 tokio = { version = "1.44.1", features = ["full"] }
-tower-http = { version = "0.6.2", features = ["compression-full", "trace"]}
+tower-http = { version = "0.6.2", features = ["compression-full", "trace"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 
