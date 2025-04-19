@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id,\n                amount,\n                TO_CHAR(date, 'YYYY-MM-DD') AS \"date!\",\n                description\n            FROM\n                income\n            WHERE\n                ($1::DATE IS NULL OR date >= $1::DATE)\n                AND ($2::DATE IS NULL OR date <= $2::DATE)\n            ORDER BY id\n            LIMIT $3 OFFSET $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "date!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Date",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      true
+    ]
+  },
+  "hash": "46cd7ec8e591c56a2847c11379150528bbcefe67de51bc3fddb1baa91d780b7a"
+}

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE income\n            SET amount = $1,\n                date = $2,\n                description = $3,\n                wallet_id = $4\n            WHERE id = $5\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Date",
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bafa624914b37751240df6e708920ee4fd8e1a70d2ae51736e72a01c0be14264"
+}

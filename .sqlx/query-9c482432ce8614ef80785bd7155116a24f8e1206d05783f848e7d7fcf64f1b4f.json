@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM expense_tag WHERE expense_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9c482432ce8614ef80785bd7155116a24f8e1206d05783f848e7d7fcf64f1b4f"
+}

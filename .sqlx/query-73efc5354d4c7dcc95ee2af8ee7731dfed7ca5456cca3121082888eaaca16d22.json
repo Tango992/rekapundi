@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                e.amount,\n                TO_CHAR(e.date, 'YYYY-MM-DD') AS \"date!\",\n                e.description,\n                e.priority,\n                JSONB_BUILD_OBJECT(\n                    'id', c.id,\n                    'name', c.name\n                ) AS \"category!: sqlx::types::Json<SimpleEntity>\",\n                JSONB_BUILD_OBJECT(\n                    'id', w.id,\n                    'name', w.name\n                ) AS \"wallet!: sqlx::types::Json<SimpleEntity>\",\n                COALESCE(\n                    JSONB_AGG(\n                        JSONB_BUILD_OBJECT(\n                            'id', t.id,\n                            'name', t.name,\n                            'is_important', t.is_important\n                        ) ORDER BY (CASE WHEN t.is_important IS true THEN 0 ELSE 1 END), t.name\n                    ) FILTER (WHERE t.id IS NOT NULL), \n                    '[]'\n                ) AS \"tags!: sqlx::types::Json<Vec<Tag>>\"\n            FROM\n                expense e\n            JOIN\n                category c ON e.category_id = c.id\n            JOIN\n                wallet w ON e.wallet_id = w.id\n            LEFT JOIN\n                expense_tag et ON e.id = et.expense_id\n            LEFT JOIN \n                tag t ON et.tag_id = t.id\n            WHERE e.id = $1\n            GROUP BY\n                e.id, c.id, w.id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "amount",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "date!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "priority",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "category!: sqlx::types::Json<SimpleEntity>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "wallet!: sqlx::types::Json<SimpleEntity>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "tags!: sqlx::types::Json<Vec<Tag>>",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "73efc5354d4c7dcc95ee2af8ee7731dfed7ca5456cca3121082888eaaca16d22"
+}

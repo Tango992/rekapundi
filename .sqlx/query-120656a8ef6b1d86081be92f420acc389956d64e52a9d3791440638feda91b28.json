@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE expense\n            SET amount = $1,\n                date = $2,\n                description = $3,\n                category_id = $4,\n                wallet_id = $5,\n                priority = $6\n            WHERE id = $7\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Date",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "120656a8ef6b1d86081be92f420acc389956d64e52a9d3791440638feda91b28"
+}

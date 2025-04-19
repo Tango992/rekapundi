@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH filtered_expense AS (\n                SELECT e.amount, e.date,  e.category_id, e.priority\n                FROM expense e\n                JOIN category c ON e.category_id = c.id\n                WHERE\n                    e.date BETWEEN $1::DATE AND $2::DATE\n                    AND e.category_id != ALL($3::INT[])\n            ),\n            filtered_income AS (\n                SELECT amount, date, wallet_id\n                FROM income\n                WHERE date BETWEEN $1 AND $2\n            ),\n            total_expense AS (\n                SELECT COALESCE(SUM(fe.amount), 0) AS amount\n                FROM filtered_expense fe\n            ),\n            total_income AS (\n                SELECT COALESCE(SUM(amount), 0) AS amount\n                FROM filtered_income\n            ),\n            category_summary AS (\n                SELECT \n                    pc.id AS parent_id,\n                    c.name,\n                    COALESCE(SUM(fe.amount), 0) AS amount\n                FROM filtered_expense fe\n                JOIN category c ON fe.category_id = c.id\n                JOIN parent_category pc ON c.parent_category_id = pc.id\n                GROUP BY pc.id, c.name\n            ),\n            parent_category_summary AS (\n                SELECT \n                    pc.id,\n                    pc.name,\n                    COALESCE(SUM(cs.amount), 0) AS amount,\n                    COALESCE(\n                        JSONB_AGG(\n                            JSONB_BUILD_OBJECT(\n                                'name', cs.name,\n                                'amount', cs.amount\n                            ) ORDER BY cs.amount DESC\n                        ),\n                        '[]'\n                    ) AS categories\n                FROM category_summary cs\n                JOIN parent_category pc ON cs.parent_id = pc.id\n                WHERE cs.amount > 0\n                GROUP BY pc.id, pc.name\n            ),\n            priority_summary AS (\n                SELECT \n                    priority AS level,\n                    COALESCE(SUM(amount), 0) AS amount\n                FROM filtered_expense\n                GROUP BY priority\n                ORDER BY amount DESC\n            ),\n            wallet_summary AS (\n                SELECT \n                    w.name,\n                    COALESCE(SUM(fi.amount), 0) AS amount\n                FROM filtered_income fi\n                JOIN wallet w ON fi.wallet_id = w.id\n                GROUP BY w.name, fi.amount\n                ORDER BY fi.amount DESC\n            )\n            SELECT \n                JSONB_BUILD_OBJECT(\n                    'amount', te.amount,\n                    'group_summary', JSONB_BUILD_OBJECT(\n                        'parent_categories', (\n                            SELECT COALESCE(\n                                JSONB_AGG(\n                                    JSONB_BUILD_OBJECT(\n                                        'name', name,\n                                        'amount', amount,\n                                        'categories', categories\n                                    ) ORDER BY amount DESC\n                                ),\n                                '[]'\n                            )\n                            FROM parent_category_summary\n                        ),\n                        'priorities', (\n                            SELECT COALESCE(\n                                JSONB_AGG(\n                                    JSONB_BUILD_OBJECT(\n                                        'level', level,\n                                        'amount', amount\n                                    ) ORDER BY amount DESC\n                                ),\n                                '[]'\n                            )\n                            FROM priority_summary\n                        )\n                    )\n                ) AS \"expense!: sqlx::types::Json<ExpenseSummary>\",\n                JSONB_BUILD_OBJECT(\n                    'amount', ti.amount,\n                    'group_summary', JSONB_BUILD_OBJECT(\n                        'wallets', (\n                            SELECT COALESCE(\n                                JSONB_AGG(\n                                    JSONB_BUILD_OBJECT(\n                                        'name', name,\n                                        'amount', amount\n                                    ) ORDER BY amount DESC\n                                ),\n                                '[]'\n                            )\n                            FROM wallet_summary\n                        )\n                    )\n                ) AS \"income!: sqlx::types::Json<IncomeSummary>\"\n            FROM\n                total_income ti,\n                total_expense te\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "expense!: sqlx::types::Json<ExpenseSummary>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 1,
+        "name": "income!: sqlx::types::Json<IncomeSummary>",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Date",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c9aa0517a46201e430fcc44099fb43cc6d671f49d1e729c85d63b8c674538fa9"
+}

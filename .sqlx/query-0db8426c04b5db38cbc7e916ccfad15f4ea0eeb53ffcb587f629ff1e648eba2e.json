@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                i.id,\n                i.amount,\n                TO_CHAR(i.date, 'YYYY-MM-DD') AS \"date!\",\n                i.description,\n                JSONB_BUILD_OBJECT(\n                    'id', w.id,\n                    'name', w.name\n                ) AS \"wallet!: sqlx::types::Json<SimpleEntity>\"\n            FROM\n                income i\n            JOIN\n                wallet w ON i.wallet_id = w.id\n            ORDER BY id DESC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "date!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "wallet!: sqlx::types::Json<SimpleEntity>",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      true,
+      null
+    ]
+  },
+  "hash": "0db8426c04b5db38cbc7e916ccfad15f4ea0eeb53ffcb587f629ff1e648eba2e"
+}
