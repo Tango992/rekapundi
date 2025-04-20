@@ -284,6 +284,11 @@ impl RepositoryOperation for Repository {
             .execute(&mut *tx)
             .await?;
 
+        if expense.tag_ids.is_empty() {
+            tx.commit().await?;
+            return Ok(());
+        }
+
         let mut expense_tag_query =
             QueryBuilder::<Postgres>::new("INSERT INTO expense_tag (expense_id, tag_id) ");
         expense_tag_query.push_values(&expense.tag_ids, |mut builder, tag_id| {
