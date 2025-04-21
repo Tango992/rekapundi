@@ -104,7 +104,7 @@ mod tests {
             "offset": "110"
         }"#;
 
-        let pagination = serde_json::from_str::<Pagination>(&json_str).unwrap();
+        let pagination = serde_json::from_str::<Pagination>(json_str).unwrap();
 
         assert_eq!(pagination.limit(), MAX_PAGINATION_LIMIT as i64);
         assert_eq!(pagination.offset(), 110);
