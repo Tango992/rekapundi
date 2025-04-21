@@ -191,8 +191,8 @@ mod tests {
         let json_str = r#"{
             "startDate": "2025-03-01",
             "endDate": "2025-04-01",
-            "limit": 10,
-            "offset": 0
+            "limit": "10",
+            "offset": "0"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
@@ -230,8 +230,8 @@ mod tests {
         let json_str = r#"{
             "startDate": "2025-03-01",
             "endDate": "2025-04-01",
-            "limit": null,
-            "offset": null
+            "limit": "null",
+            "offset": "null"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
@@ -249,8 +249,8 @@ mod tests {
     #[test]
     fn test_index_expense_query_with_invalid_pagination() {
         let json_str = r#"{
-            "limit": 101,
-            "offset": -1
+            "limit": "101",
+            "offset": "-1"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
@@ -264,8 +264,8 @@ mod tests {
     #[test]
     fn test_index_expense_query_with_missing_optional_fields() {
         let json_str = r#"{
-            "limit": 20,
-            "offset": 5
+            "limit": "20",
+            "offset": "5"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
@@ -281,8 +281,8 @@ mod tests {
         let json_str = r#"{
             "startDate": null,
             "endDate": null,
-            "limit": 15,
-            "offset": 10
+            "limit": "15",
+            "offset": "10"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();
@@ -298,8 +298,8 @@ mod tests {
         let json_str = r#"{
             "startDate": "2025/03/01",
             "endDate": "2025-04-32",
-            "limit": 25,
-            "offset": 0
+            "limit": "25",
+            "offset": "0"
         }"#;
 
         let query: IndexExpenseQuery = serde_json::from_str(json_str).unwrap();

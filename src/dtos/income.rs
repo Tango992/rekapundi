@@ -191,8 +191,8 @@ mod tests {
         let json_str = r#"{
             "startDate": "2025-03-01",
             "endDate": "2025-04-01",
-            "limit": 25,
-            "offset": 0
+            "limit": "25",
+            "offset": "0"
         }"#;
 
         let query: IndexIncomeQuery = serde_json::from_str(json_str).unwrap();

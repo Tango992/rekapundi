@@ -29,11 +29,7 @@ pub struct IndexParentCategoriesResponse {
 #[serde(rename_all(deserialize = "camelCase"))]
 pub struct IndexTagsQuery {
     /// The value to filter tags by their importance.
-    #[serde(
-        deserialize_with = "deserializer::bool_with_fallback",
-        skip_serializing_if = "Option::is_none",
-        default
-    )]
+    #[serde(deserialize_with = "deserializer::bool_with_fallback", default)]
     pub mark_important_value: Option<bool>,
     #[serde(flatten)]
     pub pagination: Pagination,
@@ -64,8 +60,8 @@ mod tests {
     fn test_index_tag_query_happy() {
         let json_str = r#"{
             "markImportantValue": true,
-            "offset": 0,
-            "limit": 10
+            "offset": "0",
+            "limit": "10"
         }"#;
 
         let query: IndexTagsQuery = serde_json::from_str(json_str).unwrap();
@@ -78,8 +74,8 @@ mod tests {
     fn test_index_tag_query_invalid_mark_important_value() {
         let json_str = r#"{
             "markImportantValue": "invalid",
-            "offset": 0,
-            "limit": 10
+            "offset": "0",
+            "limit": "10"
         }"#;
 
         let result: IndexTagsQuery = serde_json::from_str(json_str).unwrap();
@@ -91,8 +87,8 @@ mod tests {
     #[test]
     fn test_index_tag_query_missing_mark_important_value() {
         let json_str = r#"{
-            "offset": 0,
-            "limit": 10
+            "offset": "0",
+            "limit": "10"
         }"#;
 
         let query: IndexTagsQuery = serde_json::from_str(json_str).unwrap();
