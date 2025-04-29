@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, name, is_important\n            FROM tag\n            WHERE $1::BOOLEAN IS NULL OR is_important = $1\n            ORDER BY (CASE WHEN is_important IS true THEN 0 ELSE 1 END), name\n            OFFSET $2 LIMIT $3\n            ",
+  "query": "\n            SELECT id, name, is_important\n            FROM tag\n            WHERE $1::BOOLEAN IS NULL OR is_important = $1\n            ORDER BY (CASE WHEN is_important IS true THEN 0 ELSE 1 END), LOWER(name)\n            OFFSET $2 LIMIT $3\n            ",
   "describe": {
     "columns": [
       {
@@ -32,5 +32,5 @@
       false
     ]
   },
-  "hash": "78336cbfa30769adb46db11333ee45da5044cd014eff019743b546173f8678fc"
+  "hash": "55f4e6e576c6531362bd1cfa182fb342ab1df84c26efcd01db534d8842b85251"
 }

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                pc.id,\n                pc.name,\n                c.categories AS \"categories!: sqlx::types::Json<Vec<SimpleEntity>>\"\n            FROM\n                parent_category pc\n            LEFT JOIN LATERAL (\n                SELECT COALESCE(\n                    JSONB_AGG(\n                        JSONB_BUILD_OBJECT('id', c.id, 'name', c.name) ORDER BY LOWER(c.name)\n                    ) FILTER (WHERE c.id IS NOT NULL),\n                    '[]'::JSONB\n                ) AS categories\n                FROM\n                    category c\n                WHERE\n                    c.parent_category_id = pc.id\n            ) AS c ON TRUE\n            ORDER BY\n                pc.name\n            OFFSET $1 LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "categories!: sqlx::types::Json<Vec<SimpleEntity>>",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "d2c38869e6a41e2ce237560741262a700162c928f67440f1733b88afefc82ac6"
+}
