@@ -66,7 +66,7 @@ impl RepositoryOperation for Repository {
             r#"
             SELECT id, name
             FROM category
-            ORDER BY name
+            ORDER BY LOWER(name)
             OFFSET $1 LIMIT $2
             "#,
             offset,
@@ -95,7 +95,7 @@ impl RepositoryOperation for Repository {
             LEFT JOIN LATERAL (
                 SELECT COALESCE(
                     JSONB_AGG(
-                        JSONB_BUILD_OBJECT('id', c.id, 'name', c.name) ORDER BY c.name
+                        JSONB_BUILD_OBJECT('id', c.id, 'name', c.name) ORDER BY LOWER(c.name)
                     ) FILTER (WHERE c.id IS NOT NULL),
                     '[]'::JSONB
                 ) AS categories
@@ -129,7 +129,7 @@ impl RepositoryOperation for Repository {
             SELECT id, name, is_important
             FROM tag
             WHERE $1::BOOLEAN IS NULL OR is_important = $1
-            ORDER BY (CASE WHEN is_important IS true THEN 0 ELSE 1 END), name
+            ORDER BY (CASE WHEN is_important IS true THEN 0 ELSE 1 END), LOWER(name)
             OFFSET $2 LIMIT $3
             "#,
             mark_important_value,
@@ -152,7 +152,7 @@ impl RepositoryOperation for Repository {
             r#"
             SELECT id, name
             FROM wallet
-            ORDER BY name
+            ORDER BY LOWER(name)
             OFFSET $1 LIMIT $2
             "#,
             offset,
