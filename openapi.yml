@@ -2,7 +2,7 @@ openapi: 3.1.1
 info:
   title: Rekapundi
   description: Rekap your pundi.
-  version: 0.1.0
+  version: 0.2.0
 tags:
   - name: expenses
     description: Operations related to expenses.
@@ -538,6 +538,63 @@ paths:
                 $ref: "#/components/schemas/ClientRelatedError"
         "401":
           description: Unauthorized.
+        "422":
+          description: Invalid request body semantics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
+
+  /transfers:
+    post:
+      tags: [others]
+      summary: Transfer money between wallets.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          The transfer request body.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceWalletId:
+                  description: The ID of the source wallet.
+                  type: integer
+                  minimum: 1
+                targetWalletId:
+                  description: The ID of the target wallet.
+                  type: integer
+                  minimum: 1
+                amount:
+                  description: The amount to transfer.
+                  type: integer
+                  minimum: 1
+                fee:
+                  description: The fee for the transfer.
+                  type: integer
+                  minimum: 0
+                description:
+                  description: Optional description for the transfer.
+                  type: string
+                  example: Transfer to savings.
+                  nullable: true
+              required: [sourceWalletId, targetWalletId, amount, fee]
+      responses:
+        "201":
+          description: Success.
+        "400":
+          description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientRelatedError"
+        "401":
+          description: Unauthorized.
+        "409":
+          description: Invalid foreign key association.
         "422":
           description: Invalid request body semantics.
           content:
