@@ -2,7 +2,7 @@ openapi: 3.1.1
 info:
   title: Rekapundi
   description: Rekap your pundi.
-  version: 0.2.0
+  version: 0.1.0
 tags:
   - name: expenses
     description: Operations related to expenses.
@@ -12,6 +12,8 @@ tags:
     description: Operations related to other functionalities.
   - name: summaries
     description: Operations related to income/expense summary.
+  - name: wallets
+    description: Operations related to wallets.
 
 paths:
   /expenses:
@@ -468,7 +470,7 @@ paths:
 
   /wallets:
     get:
-      tags: [others]
+      tags: [wallets]
       summary: Show a list of wallets.
       security:
         - bearerAuth: []
@@ -545,9 +547,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClientRelatedError"
 
-  /transfers:
+  /wallets/transfers:
     post:
-      tags: [others]
+      tags: [wallets]
       summary: Transfer money between wallets.
       security:
         - bearerAuth: []
@@ -560,6 +562,10 @@ paths:
             schema:
               type: object
               properties:
+                date:
+                  description: The date of the expense.
+                  type: string
+                  format: date
                 sourceWalletId:
                   description: The ID of the source wallet.
                   type: integer
@@ -581,7 +587,7 @@ paths:
                   type: string
                   example: Transfer to savings.
                   nullable: true
-              required: [sourceWalletId, targetWalletId, amount, fee]
+              required: [amount, date, fee, sourceWalletId, targetWalletId]
       responses:
         "201":
           description: Success.
