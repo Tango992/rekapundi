@@ -3,6 +3,7 @@ pub mod income;
 pub mod query_result;
 pub mod summary;
 pub mod util;
+pub mod wallet;
 
 use crate::{common::deserializer, constants::MAX_PAGINATION_LIMIT};
 use serde::Deserialize;
