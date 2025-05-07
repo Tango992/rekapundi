@@ -2,11 +2,11 @@ use crate::common::deserializer;
 use serde::{self, Deserialize};
 use time::Date;
 
-/// Data transfer object for saving transfer record between wallets.
+/// The request body for saving a money transfer between wallets.
 #[derive(Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 #[cfg_attr(test, derive(Debug))]
-pub struct SaveTransfer {
+pub struct SaveMoneyTransferRequest {
     /// The ID of the source wallet.
     #[serde(deserialize_with = "deserializer::positive_int")]
     pub source_wallet_id: i32,
@@ -26,6 +26,35 @@ pub struct SaveTransfer {
     pub description: Option<String>,
 }
 
+/// DTO used by the repository for saving a money transfer record in the database.
+pub struct SaveMoneyTransfer {
+    /// The ID of the source wallet.
+    pub source_wallet_id: i32,
+    /// The ID of the target wallet.
+    pub target_wallet_id: i32,
+    /// The amount of the transfer.
+    pub amount: i32,
+    /// The date of the transfer.
+    pub date: Date,
+    /// Optional description of the transfer.
+    pub description: Option<String>,
+}
+
+/// DTO used by the repository for saving a money transfer fee record in the database.
+/// It will be inserted into the `expense` table.
+pub struct SaveMoneyTransferFee {
+    /// The priority of the fee. It's defaulted to secondary priority.
+    pub priority: i32,
+    /// The ID of the source wallet.
+    pub wallet_id: i32,
+    /// The amount of the fee.
+    pub amount: i32,
+    /// The date of the transfer.
+    pub date: Date,
+    /// Optional description of the fee.
+    pub description: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -42,7 +71,7 @@ mod tests {
             "description": "Test transfer"
         }"#;
 
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_ok());
         let transfer = result.unwrap();
         assert_eq!(transfer.source_wallet_id, 1);
@@ -62,7 +91,7 @@ mod tests {
             "date": "2025-05-06",
             "description": null
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_err());
     }
 
@@ -76,7 +105,7 @@ mod tests {
             "date": "2025-05-06",
             "description": null
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_err());
     }
 
@@ -90,7 +119,7 @@ mod tests {
             "date": "2025-05-06",
             "description": null
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_err());
     }
 
@@ -104,7 +133,7 @@ mod tests {
             "date": "2025-05-06",
             "description": null
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_err());
     }
 
@@ -118,7 +147,7 @@ mod tests {
             "date": "2025-13-01",
             "description": null
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_err());
     }
 
@@ -131,7 +160,7 @@ mod tests {
             "fee": 10,
             "date": "2025-05-06"
         }"#;
-        let result = serde_json::from_str::<SaveTransfer>(json_str);
+        let result = serde_json::from_str::<SaveMoneyTransferRequest>(json_str);
         assert!(result.is_ok());
         let transfer = result.unwrap();
         assert_eq!(transfer.description, None);
