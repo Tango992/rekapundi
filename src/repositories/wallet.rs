@@ -1,0 +1,105 @@
+use async_trait::async_trait;
+use sqlx::PgPool;
+use std::sync::Arc;
+
+use crate::dtos::{
+    query_result::SimpleEntity,
+    wallet::{SaveMoneyTransfer, SaveMoneyTransferFee},
+};
+
+/// Repository to interact with the `wallet` table in the database.
+pub struct Repository {
+    /// The PostgreSQL connection pool.
+    pool: Arc<PgPool>,
+}
+
+impl Repository {
+    /// Creates a new `WalletRepository` instance.
+    pub fn new(pool: Arc<PgPool>) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+pub trait RepositoryOperation: Send + Sync {
+    /// Finds multiple wallets from the database.
+    /// The result is paginated based on the provided offset and limit.
+    async fn find_many(&self, offset: i64, limit: i64) -> Result<Vec<SimpleEntity>, sqlx::Error>;
+
+    /// Saves a record of money transfer between wallets.
+    /// If a fee record is provided, the fee will be saved in the `expense` table.
+    async fn insert_money_transfer(
+        &self,
+        money_transfer_record: &SaveMoneyTransfer,
+        fee_record: Option<&SaveMoneyTransferFee>,
+    ) -> Result<(), sqlx::Error>;
+}
+
+#[async_trait]
+impl RepositoryOperation for Repository {
+    async fn find_many(&self, offset: i64, limit: i64) -> Result<Vec<SimpleEntity>, sqlx::Error> {
+        let wallets = sqlx::query_as!(
+            SimpleEntity,
+            r#"
+            SELECT id, name
+            FROM wallet
+            ORDER BY LOWER(name)
+            OFFSET $1 LIMIT $2
+            "#,
+            offset,
+            limit,
+        )
+        .fetch_all(&*self.pool)
+        .await?;
+
+        Ok(wallets)
+    }
+
+    async fn insert_money_transfer(
+        &self,
+        money_transfer_record: &SaveMoneyTransfer,
+        fee_record: Option<&SaveMoneyTransferFee>,
+    ) -> Result<(), sqlx::Error> {
+        let insert_wallet_transfer_query = sqlx::query!(
+            r#"
+            INSERT INTO wallet_transfer (source_wallet_id, target_wallet_id, amount, date, description)
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            money_transfer_record.source_wallet_id,
+            money_transfer_record.target_wallet_id,
+            money_transfer_record.amount,
+            money_transfer_record.date,
+            money_transfer_record.description,
+        );
+
+        match fee_record {
+            None => {
+                insert_wallet_transfer_query.execute(&*self.pool).await?;
+            }
+
+            Some(fee_record) => {
+                let mut tx = self.pool.begin().await?;
+
+                sqlx::query!(
+                    r#"
+                    INSERT INTO expense (priority, wallet_id, amount, date, description)
+                    VALUES ($1, $2, $3, $4, $5)
+                    "#,
+                    fee_record.priority,
+                    fee_record.wallet_id,
+                    fee_record.amount,
+                    fee_record.date,
+                    fee_record.description,
+                )
+                .execute(&mut *tx)
+                .await?;
+
+                insert_wallet_transfer_query.execute(&mut *tx).await?;
+
+                tx.commit().await?;
+            }
+        }
+
+        Ok(())
+    }
+}
