@@ -30,6 +30,22 @@ struct Claim {
     nbf: usize,
 }
 
+/// Helper function to get the current unix timestamp.
+fn get_current_unix_timestamp() -> Result<usize, StatusCode> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|_| {
+            tracing::error!("Failed to get current time");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .as_secs()
+        .try_into()
+        .map_err(|_| {
+            tracing::error!("Failed to convert time to usize");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })
+}
+
 /// Middleware to authenticate requests using JWT tokens.
 pub async fn authenticate_request(
     request: Request,
@@ -57,20 +73,7 @@ pub async fn authenticate_request(
     )
     .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
-    let current_unix_timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|_| {
-            tracing::error!("Failed to get current time");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?
-        .as_secs()
-        .try_into()
-        .map_err(|_| {
-            tracing::error!("Failed to convert time to usize");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-
-    if token.claims.nbf > current_unix_timestamp {
+    if token.claims.nbf > get_current_unix_timestamp()? {
         return Err(StatusCode::UNAUTHORIZED);
     }
 

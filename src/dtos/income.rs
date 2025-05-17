@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 /// Data transfer object for saving an income.
-/// Numeric fields are represented with unsigned integers to automatically filter out negative values from the client.
 #[derive(Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 #[cfg_attr(test, derive(Debug))]
