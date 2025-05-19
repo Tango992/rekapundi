@@ -8,6 +8,7 @@ use crate::dtos::{
 };
 
 /// Repository to interact with the `wallet` table in the database.
+/// Additionally, it may interact with the `wallet_transfer` and `expense` tables.
 pub struct Repository {
     /// The PostgreSQL connection pool.
     pool: Arc<PgPool>,
@@ -80,21 +81,21 @@ impl RepositoryOperation for Repository {
             Some(fee_record) => {
                 let mut tx = self.pool.begin().await?;
 
+                insert_wallet_transfer_query.execute(&mut *tx).await?;
+
                 sqlx::query!(
                     r#"
-                    INSERT INTO expense (priority, wallet_id, amount, date, description)
-                    VALUES ($1, $2, $3, $4, $5)
+                    INSERT INTO expense (category_id, priority, wallet_id, amount, date, description)
+                    VALUES ($1, $2, $3, $4, $5, $6)
                     "#,
+                    fee_record.category_id,
                     fee_record.priority,
                     fee_record.wallet_id,
                     fee_record.amount,
                     fee_record.date,
                     fee_record.description,
                 )
-                .execute(&mut *tx)
-                .await?;
-
-                insert_wallet_transfer_query.execute(&mut *tx).await?;
+                .execute(&mut *tx).await?;
 
                 tx.commit().await?;
             }

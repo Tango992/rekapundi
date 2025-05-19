@@ -47,6 +47,8 @@ pub struct SaveMoneyTransferFee {
     pub priority: i32,
     /// The ID of the source wallet.
     pub wallet_id: i32,
+    /// The ID that indicates fee category.
+    pub category_id: i32,
     /// The amount of the fee.
     pub amount: i32,
     /// The date of the transfer.
