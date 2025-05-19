@@ -23,11 +23,15 @@ pub enum AppError {
     PathRejection(PathRejection),
     /// Error related to SQLx database operations.
     SqlxError(sqlx::Error),
+    /// Represents a generic status code error.
+    StatusCode(StatusCode),
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let (status, message) = match self {
+            AppError::StatusCode(status) => (status, None),
+
             AppError::JsonRejection(rejection) => (rejection.status(), Some(rejection.body_text())),
 
             AppError::PathRejection(rejection) => (
@@ -61,6 +65,12 @@ impl IntoResponse for AppError {
             Some(msg) => (status, Json(ErrorResponse { message: msg })).into_response(),
             None => status.into_response(),
         }
+    }
+}
+
+impl From<StatusCode> for AppError {
+    fn from(status: StatusCode) -> Self {
+        AppError::StatusCode(status)
     }
 }
 
@@ -114,5 +124,14 @@ mod tests {
             app_error.into_response().status(),
             StatusCode::INTERNAL_SERVER_ERROR
         );
+    }
+
+    #[test]
+    fn test_from_status_code() {
+        let status_code = StatusCode::BAD_REQUEST;
+        let app_error = AppError::from(status_code);
+
+        assert!(matches!(app_error, AppError::StatusCode(_)));
+        assert_eq!(app_error.into_response().status(), StatusCode::BAD_REQUEST);
     }
 }

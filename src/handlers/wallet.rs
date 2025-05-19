@@ -42,7 +42,11 @@ async fn transfer(
     State(wallet_repository): State<Arc<dyn wallet::RepositoryOperation>>,
     WithRejection(Json(body), _): WithRejection<Json<SaveMoneyTransferRequest>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
-    let money_transfer = SaveMoneyTransfer {
+    if body.source_wallet_id == body.target_wallet_id {
+        return Err(AppError::StatusCode(StatusCode::CONFLICT));
+    }
+
+    let save_transfer = SaveMoneyTransfer {
         source_wallet_id: body.source_wallet_id,
         target_wallet_id: body.target_wallet_id,
         amount: body.amount,
@@ -50,7 +54,7 @@ async fn transfer(
         description: body.description.clone(),
     };
 
-    let save_fee = match body.fee {
+    let save_transfer_fee = match body.fee {
         0 => None,
         _ => {
             let description = match body.description {
@@ -61,7 +65,7 @@ async fn transfer(
             Some(SaveMoneyTransferFee {
                 priority: 2, // Default to secondary priority
                 wallet_id: body.source_wallet_id,
-                category_id: 1, // Default to a specific category ID
+                category_id: 25, // Default to a specific category ID. Change as needed.
                 amount: body.fee,
                 date: body.date,
                 description,
@@ -70,7 +74,7 @@ async fn transfer(
     };
 
     wallet_repository
-        .insert_money_transfer(&money_transfer, save_fee.as_ref())
+        .insert_money_transfer(&save_transfer, save_transfer_fee.as_ref())
         .await?;
 
     Ok(StatusCode::CREATED)
