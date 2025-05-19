@@ -44,14 +44,6 @@ pub trait RepositoryOperation: Send + Sync {
         offset: i64,
         limit: i64,
     ) -> Result<Vec<Tag>, sqlx::Error>;
-
-    /// Finds multiple wallets from the database.
-    /// The result is paginated based on the provided offset and limit.
-    async fn find_many_wallets(
-        &self,
-        offset: i64,
-        limit: i64,
-    ) -> Result<Vec<SimpleEntity>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -140,27 +132,5 @@ impl RepositoryOperation for Repository {
         .await?;
 
         Ok(tags)
-    }
-
-    async fn find_many_wallets(
-        &self,
-        offset: i64,
-        limit: i64,
-    ) -> Result<Vec<SimpleEntity>, sqlx::Error> {
-        let wallets = sqlx::query_as!(
-            SimpleEntity,
-            r#"
-            SELECT id, name
-            FROM wallet
-            ORDER BY LOWER(name)
-            OFFSET $1 LIMIT $2
-            "#,
-            offset,
-            limit,
-        )
-        .fetch_all(&*self.pool)
-        .await?;
-
-        Ok(wallets)
     }
 }

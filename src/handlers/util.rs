@@ -13,7 +13,7 @@ use crate::{
         Pagination,
         util::{
             IndexCategoriesResponse, IndexParentCategoriesResponse, IndexTagsQuery,
-            IndexTagsResponse, IndexWalletsResponse,
+            IndexTagsResponse,
         },
     },
     repositories::util,
@@ -24,7 +24,6 @@ pub fn util_routes() -> Router<Arc<dyn util::RepositoryOperation>> {
         .route("/categories", get(index_categories))
         .route("/parent-categories", get(index_parent_categories))
         .route("/tags", get(index_tags))
-        .route("/wallets", get(index_wallets))
 }
 
 /// Handler to list all categories.
@@ -68,18 +67,6 @@ async fn index_tags(
         .await?;
 
     Ok((StatusCode::OK, Json(IndexTagsResponse { tags })))
-}
-
-/// Handler to list all wallets.
-async fn index_wallets(
-    State(util_repository): State<Arc<dyn util::RepositoryOperation>>,
-    Query(query): Query<Pagination>,
-) -> Result<impl IntoResponse, AppError> {
-    let wallets = util_repository
-        .find_many_wallets(query.offset(), query.limit())
-        .await?;
-
-    Ok((StatusCode::OK, Json(IndexWalletsResponse { wallets })))
 }
 
 #[cfg(test)]
@@ -165,19 +152,6 @@ mod tests {
         ]
     }
 
-    fn wallets_response() -> Vec<SimpleEntity> {
-        vec![
-            SimpleEntity {
-                id: 1,
-                name: "Cash".to_string(),
-            },
-            SimpleEntity {
-                id: 2,
-                name: "Credit Card".to_string(),
-            },
-        ]
-    }
-
     #[async_trait]
     impl util::RepositoryOperation for MockUtilRepository {
         async fn find_many_categories(
@@ -203,14 +177,6 @@ mod tests {
             _limit: i64,
         ) -> Result<Vec<Tag>, SqlxError> {
             Ok(tags_response())
-        }
-
-        async fn find_many_wallets(
-            &self,
-            _offset: i64,
-            _limit: i64,
-        ) -> Result<Vec<SimpleEntity>, SqlxError> {
-            Ok(wallets_response())
         }
     }
 
@@ -284,29 +250,5 @@ mod tests {
         let body = serde_json::from_slice::<IndexTagsResponse>(&body_bytes).unwrap();
 
         assert_eq!(body.tags, tags_response());
-    }
-
-    #[tokio::test]
-    async fn test_index_wallets_handler() {
-        // Prepare
-        let repo = MockUtilRepository::new();
-        let app = util_routes().with_state(repo);
-
-        let request = Request::builder()
-            .method("GET")
-            .uri("/wallets")
-            .body(Body::empty())
-            .unwrap();
-
-        // Execute
-        let response = app.oneshot(request).await.unwrap();
-
-        // Assert
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let body_bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-        let body = serde_json::from_slice::<IndexWalletsResponse>(&body_bytes).unwrap();
-
-        assert_eq!(body.wallets, wallets_response());
     }
 }

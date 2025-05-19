@@ -43,14 +43,6 @@ pub struct IndexTagsResponse {
     pub tags: Vec<Tag>,
 }
 
-/// The response body to list all wallets.
-#[derive(Serialize)]
-#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
-pub struct IndexWalletsResponse {
-    /// The list of wallets.
-    pub wallets: Vec<SimpleEntity>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
