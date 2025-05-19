@@ -1,5 +1,5 @@
-use crate::common::deserializer;
-use serde::{self, Deserialize};
+use crate::{common::deserializer, dtos::query_result::SimpleEntity};
+use serde::{self, Deserialize, Serialize};
 use time::Date;
 
 /// The request body for saving a money transfer between wallets.
@@ -55,6 +55,14 @@ pub struct SaveMoneyTransferFee {
     pub date: Date,
     /// Optional description of the fee.
     pub description: Option<String>,
+}
+
+/// The response body to list all wallets.
+#[derive(Serialize)]
+#[cfg_attr(test, derive(Debug, Deserialize, Eq, PartialEq))]
+pub struct IndexWalletsResponse {
+    /// The list of wallets.
+    pub wallets: Vec<SimpleEntity>,
 }
 
 #[cfg(test)]
