@@ -9,6 +9,7 @@ mod services;
 use axum::{Router, http::StatusCode, middleware, routing::get};
 use handlers::{
     expense::expense_routes, income::income_routes, summary::summary_routes, util::util_routes,
+    wallet::wallet_routes,
 };
 use middlewares::{auth::authenticate_request, trace::http_trace_layer};
 use repositories::{expense, income, summary, util};
@@ -25,12 +26,14 @@ async fn main() {
     let income_repository = Arc::new(income::Repository::new(Arc::clone(&pg_pool)));
     let summary_repository = Arc::new(summary::SummaryRepository::new(Arc::clone(&pg_pool)));
     let util_repository = Arc::new(util::Repository::new(Arc::clone(&pg_pool)));
+    let wallet_repository = Arc::new(repositories::wallet::Repository::new(Arc::clone(&pg_pool)));
 
     let auth_required_router = Router::new()
         .merge(expense_routes().with_state(expense_repository))
         .merge(income_routes().with_state(income_repository))
         .merge(summary_routes().with_state(summary_repository))
         .merge(util_routes().with_state(util_repository))
+        .merge(wallet_routes().with_state(wallet_repository))
         .route_layer(middleware::from_fn(authenticate_request));
 
     let app = Router::new()
