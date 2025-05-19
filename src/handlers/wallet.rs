@@ -57,10 +57,9 @@ async fn transfer(
     let save_transfer_fee = match body.fee {
         0 => None,
         _ => {
-            let description = match body.description {
-                Some(desc) => Some(format!("Wallet transfer fee: {}", desc)),
-                None => None,
-            };
+            let description = body
+                .description
+                .map(|description| format!("Wallet transfer fee: {}", description));
 
             Some(SaveMoneyTransferFee {
                 priority: 2, // Default to secondary priority
