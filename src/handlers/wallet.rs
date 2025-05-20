@@ -248,4 +248,33 @@ mod tests {
         // Assert
         assert_eq!(response.status(), StatusCode::CREATED);
     }
+
+    #[tokio::test]
+    async fn test_transfer_handler_with_same_wallet() {
+        // Prepare
+        let repo = MockWalletRepository::new();
+        let app = wallet_routes().with_state(repo);
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/wallets/transfer")
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "sourceWalletId": 1,
+                    "targetWalletId": 1,
+                    "amount": 1000,
+                    "fee": 5,
+                    "date": "2025-05-06"
+                })
+                .to_string(),
+            ))
+            .unwrap();
+
+        // Execute
+        let response = app.oneshot(request).await.unwrap();
+
+        // Assert
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+    }
 }
