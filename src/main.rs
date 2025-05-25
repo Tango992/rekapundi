@@ -1,6 +1,7 @@
 mod common;
 mod constants;
 mod dtos;
+mod entities;
 mod handlers;
 mod middlewares;
 mod repositories;

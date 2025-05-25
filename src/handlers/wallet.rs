@@ -2,10 +2,9 @@ use crate::{
     common::errors::AppError,
     dtos::{
         Pagination,
-        wallet::{
-            IndexWalletsResponse, SaveMoneyTransfer, SaveMoneyTransferFee, SaveMoneyTransferRequest,
-        },
+        wallet::{IndexWalletsResponse, SaveWalletTransferRequest},
     },
+    entities::wallet::{SaveWalletTransfer, SaveWalletTransferFee},
     repositories::wallet,
 };
 use axum::{
@@ -40,13 +39,13 @@ async fn index(
 
 async fn transfer(
     State(wallet_repository): State<Arc<dyn wallet::RepositoryOperation>>,
-    WithRejection(Json(body), _): WithRejection<Json<SaveMoneyTransferRequest>, AppError>,
+    WithRejection(Json(body), _): WithRejection<Json<SaveWalletTransferRequest>, AppError>,
 ) -> Result<impl IntoResponse, AppError> {
     if body.source_wallet_id == body.target_wallet_id {
         return Err(AppError::StatusCode(StatusCode::CONFLICT));
     }
 
-    let save_transfer = SaveMoneyTransfer {
+    let save_transfer = SaveWalletTransfer {
         source_wallet_id: body.source_wallet_id,
         target_wallet_id: body.target_wallet_id,
         amount: body.amount,
@@ -61,7 +60,7 @@ async fn transfer(
                 .description
                 .map(|description| format!("Wallet transfer fee: {}", description));
 
-            Some(SaveMoneyTransferFee {
+            Some(SaveWalletTransferFee {
                 priority: 2, // Default to secondary priority
                 wallet_id: body.source_wallet_id,
                 category_id: 25, // Default to a specific category ID. Change as needed.
@@ -73,7 +72,7 @@ async fn transfer(
     };
 
     wallet_repository
-        .insert_money_transfer(&save_transfer, save_transfer_fee.as_ref())
+        .insert_wallet_transfer_with_fee(&save_transfer, save_transfer_fee.as_ref())
         .await?;
 
     Ok(StatusCode::CREATED)
@@ -82,7 +81,7 @@ async fn transfer(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dtos::query_result::SimpleEntity;
+    use crate::{dtos::query_result::SimpleEntity, entities::wallet::SaveWalletTransferFee};
 
     use async_trait::async_trait;
     use axum::{
@@ -127,10 +126,10 @@ mod tests {
             Ok(index_wallets_response().wallets)
         }
 
-        async fn insert_money_transfer(
+        async fn insert_wallet_transfer_with_fee(
             &self,
-            _money_transfer_record: &SaveMoneyTransfer,
-            _fee_record: Option<&SaveMoneyTransferFee>,
+            _money_transfer_record: &SaveWalletTransfer,
+            _fee_record: Option<&SaveWalletTransferFee>,
         ) -> Result<(), SqlxError> {
             Ok(())
         }

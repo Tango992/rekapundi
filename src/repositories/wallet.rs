@@ -2,9 +2,9 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use std::sync::Arc;
 
-use crate::dtos::{
-    query_result::SimpleEntity,
-    wallet::{SaveMoneyTransfer, SaveMoneyTransferFee},
+use crate::{
+    dtos::query_result::SimpleEntity,
+    entities::wallet::{SaveWalletTransfer, SaveWalletTransferFee},
 };
 
 /// Repository to interact with the `wallet` table in the database.
@@ -29,10 +29,10 @@ pub trait RepositoryOperation: Send + Sync {
 
     /// Saves a record of money transfer between wallets.
     /// If a fee record is provided, the fee will be saved in the `expense` table.
-    async fn insert_money_transfer(
+    async fn insert_wallet_transfer_with_fee(
         &self,
-        money_transfer_record: &SaveMoneyTransfer,
-        fee_record: Option<&SaveMoneyTransferFee>,
+        wallet_transfer_record: &SaveWalletTransfer,
+        fee_record: Option<&SaveWalletTransferFee>,
     ) -> Result<(), sqlx::Error>;
 }
 
@@ -56,32 +56,36 @@ impl RepositoryOperation for Repository {
         Ok(wallets)
     }
 
-    async fn insert_money_transfer(
+    async fn insert_wallet_transfer_with_fee(
         &self,
-        money_transfer_record: &SaveMoneyTransfer,
-        fee_record: Option<&SaveMoneyTransferFee>,
+        wallet_transfer_record: &SaveWalletTransfer,
+        fee_record: Option<&SaveWalletTransferFee>,
     ) -> Result<(), sqlx::Error> {
-        let insert_wallet_transfer_query = sqlx::query!(
+        let insert_wallet_transfer_with_fee_query = sqlx::query!(
             r#"
             INSERT INTO wallet_transfer (source_wallet_id, target_wallet_id, amount, date, description)
             VALUES ($1, $2, $3, $4, $5)
             "#,
-            money_transfer_record.source_wallet_id,
-            money_transfer_record.target_wallet_id,
-            money_transfer_record.amount,
-            money_transfer_record.date,
-            money_transfer_record.description,
+            wallet_transfer_record.source_wallet_id,
+            wallet_transfer_record.target_wallet_id,
+            wallet_transfer_record.amount,
+            wallet_transfer_record.date,
+            wallet_transfer_record.description,
         );
 
         match fee_record {
             None => {
-                insert_wallet_transfer_query.execute(&*self.pool).await?;
+                insert_wallet_transfer_with_fee_query
+                    .execute(&*self.pool)
+                    .await?;
             }
 
             Some(fee_record) => {
                 let mut tx = self.pool.begin().await?;
 
-                insert_wallet_transfer_query.execute(&mut *tx).await?;
+                insert_wallet_transfer_with_fee_query
+                    .execute(&mut *tx)
+                    .await?;
 
                 sqlx::query!(
                     r#"
