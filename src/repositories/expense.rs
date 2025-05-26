@@ -213,9 +213,6 @@ impl RepositoryOperation for Repository {
 
         drop(expense_query);
 
-        // A flag to check if the expense_tag_query is empty to avoid executing an empty query.
-        let mut is_expense_tag_query_empty = true;
-
         // Array of tuples to hold the values for the expense_tag table.
         // The order of the tuple is (expense_id, tag_id).
         let mut expense_tag_values = Vec::<(i32, i32)>::new();
@@ -225,12 +222,11 @@ impl RepositoryOperation for Repository {
             let expense_id = expense_inserted_ids[i];
 
             for tag_id in expense_tag_ids {
-                is_expense_tag_query_empty = false;
                 expense_tag_values.push((expense_id, *tag_id));
             }
         }
 
-        if is_expense_tag_query_empty {
+        if expense_tag_values.is_empty() {
             tx.commit().await?;
             return Ok(());
         }
