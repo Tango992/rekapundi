@@ -86,7 +86,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexExpenses"
+          $ref: "#/components/responses/IndexExpenses"
         "401":
           description: Unauthorized.
   /expenses/{id}:
@@ -167,7 +167,7 @@ paths:
             minimum: 0
       responses:
         "200":
-          $ref: "#/components/responseBodies/ShowExpense"
+          $ref: "#/components/responses/ShowExpense"
         "401":
           description: Unauthorized.
         "404":
@@ -186,7 +186,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responseBodies/ExpenseEntity"
+          $ref: "#/components/responses/ExpenseEntity"
         "401":
           description: Unauthorized.
         "404":
@@ -264,7 +264,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexIncomes"
+          $ref: "#/components/responses/IndexIncomes"
         "401":
           description: Unauthorized.
   /incomes/{id}:
@@ -345,7 +345,7 @@ paths:
             minimum: 0
       responses:
         "200":
-          $ref: "#/components/responseBodies/ShowIncome"
+          $ref: "#/components/responses/ShowIncome"
         "401":
           description: Unauthorized.
         "404":
@@ -364,7 +364,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responseBodies/IncomeEntity"
+          $ref: "#/components/responses/IncomeEntity"
         "401":
           description: Unauthorized.
         "404":
@@ -396,7 +396,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexCategories"
+          $ref: "#/components/responses/IndexCategories"
         "401":
           description: Unauthorized.
 
@@ -426,7 +426,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexParentCategories"
+          $ref: "#/components/responses/IndexParentCategories"
         "401":
           description: Unauthorized.
 
@@ -464,7 +464,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexTags"
+          $ref: "#/components/responses/IndexTags"
         "401":
           description: Unauthorized.
 
@@ -494,7 +494,7 @@ paths:
             maximum: 100
       responses:
         "200":
-          $ref: "#/components/responseBodies/IndexWallets"
+          $ref: "#/components/responses/IndexWallets"
         "401":
           description: Unauthorized.
 
@@ -507,7 +507,7 @@ paths:
         $ref: "#/components/requestBodies/GenerateSummary"
       responses:
         "200":
-          $ref: "#/components/responseBodies/SummaryRaw"
+          $ref: "#/components/responses/SummaryRaw"
         "400":
           description: Invalid request body.
           content:
@@ -531,7 +531,7 @@ paths:
         $ref: "#/components/requestBodies/GenerateSummaryChart"
       responses:
         "200":
-          $ref: "#/components/responseBodies/SummaryChart"
+          $ref: "#/components/responses/SummaryChart"
         "400":
           description: Invalid request body.
           content:
@@ -584,9 +584,8 @@ paths:
                   minimum: 0
                 description:
                   description: Optional description for the transfer.
-                  type: string
+                  type: ["string", "null"]
                   example: Transfer to savings.
-                  nullable: true
               required: [amount, date, fee, sourceWalletId, targetWalletId]
       responses:
         "201":
@@ -659,8 +658,7 @@ components:
         description:
           description: Additional description for the expense.
           example: Daily caffeine intake.
-          type: string
-          nullable: true
+          type: ["string", "null"]
         priority:
           description: |
             The priority scale of the expense.
@@ -744,8 +742,7 @@ components:
               description:
                 description: Additional description for the expense.
                 example: Daily caffeine intake.
-                type: string
-                nullable: true
+                type: ["string", "null"]
             required: [amount, date, description, id]
       required: [expenses]
     BaseIncome:
@@ -761,9 +758,8 @@ components:
           format: date
         description:
           description: Optional description of the income.
-          type: string
+          type: ["string", "null"]
           example: Full time job salary.
-          nullable: true
       required: [amount, date, description]
     SaveIncome:
       allOf:
@@ -955,7 +951,7 @@ components:
         message:
           description: The error message that explains the invalid request.
           type: string
-      required: message
+      required: [message]
 
   requestBodies:
     UpdateExpense:
@@ -994,7 +990,7 @@ components:
           schema:
             $ref: "#/components/schemas/GenerateSummaryChart"
 
-  responseBodies:
+  responses:
     ShowExpense:
       description: The expense record.
       content:
