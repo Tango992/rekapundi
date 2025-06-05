@@ -191,8 +191,6 @@ paths:
           description: Unauthorized.
         "404":
           description: No expenses exist yet.
-        "409":
-          description: Some foreign key associations are invalid.
 
   /incomes:
     post:
