@@ -4,7 +4,7 @@ edition = "2024"
 license = "MIT"
 name = "rekapundi"
 repository = "https:/github.com/Tango992/rekapundi"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies]
 async-trait = "0.1.88"
