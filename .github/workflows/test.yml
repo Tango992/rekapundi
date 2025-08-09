@@ -18,6 +18,6 @@ jobs:
       - name: Build
         run: cargo build --verbose
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --verbose --color=always -- --color=always
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
