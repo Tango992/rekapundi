@@ -150,7 +150,7 @@ mod tests {
         ShowIncome {
             amount: 5000,
             date: "2025-04-01".to_string(),
-            description: Some(format!("Test income {}", id)),
+            description: Some(format!("Test income {id}")),
             wallet: sqlx::types::Json(SimpleEntity {
                 id: 1,
                 name: "Bank Account".to_string(),
