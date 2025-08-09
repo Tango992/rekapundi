@@ -368,9 +368,8 @@ mod tests {
         for value in valid_values {
             let json_str = format!(
                 r#"{{
-                "priority": {}
+                "priority": {value}
             }}"#,
-                value
             );
 
             let test_struct: PriorityTestStruct = serde_json::from_str(&json_str).unwrap();

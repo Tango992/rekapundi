@@ -138,7 +138,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 
@@ -193,7 +193,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 
@@ -214,7 +214,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 
@@ -235,7 +235,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 
@@ -274,7 +274,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 
@@ -314,7 +314,7 @@ mod tests {
 
         let request = Request::builder()
             .uri("/test")
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
 

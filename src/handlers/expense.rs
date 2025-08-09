@@ -167,7 +167,7 @@ mod tests {
         ShowExpense {
             amount: 1000,
             date: "2025-04-01".to_string(),
-            description: Some(format!("Test expense {}", id)),
+            description: Some(format!("Test expense {id}")),
             priority: 1,
             category: sqlx::types::Json(SimpleEntity {
                 id: 1,
